@@ -1,0 +1,10 @@
+[workspace]
+members = [
+    "src/canister",
+    "src/lambda"
+]
+resolver = "3"
+
+[workspace.dependencies]
+candid = "0.10"
+serde = "1"
