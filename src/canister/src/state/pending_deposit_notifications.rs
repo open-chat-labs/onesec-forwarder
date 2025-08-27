@@ -1,6 +1,6 @@
-use std::collections::VecDeque;
-use serde::{Deserialize, Serialize};
 use crate::PendingDepositNotification;
+use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
 
 pub trait PendingDepositNotifications {
     fn push(&mut self, notification: PendingDepositNotification);

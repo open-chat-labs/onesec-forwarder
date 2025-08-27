@@ -1,6 +1,6 @@
-use std::collections::BTreeSet;
 use candid::Principal;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
 
 pub trait TrackedAddresses {
     fn push(&mut self, address: String);

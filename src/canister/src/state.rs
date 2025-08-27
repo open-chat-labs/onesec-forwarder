@@ -1,12 +1,12 @@
 use crate::PendingDepositNotification;
-use crate::state::pending_deposit_notifications::{HeapPendingDepositNotifications, PendingDepositNotifications};
-use crate::state::tracked_addresses::{HeapTrackedAddresses, TrackedAddresses};
+use crate::state::pending_deposit_notifications::PendingDepositNotifications;
+use crate::state::tracked_addresses::TrackedAddresses;
 
-mod tracked_addresses;
 mod pending_deposit_notifications;
+mod tracked_addresses;
 
-pub use tracked_addresses::DefaultTrackedAddresses;
 pub use pending_deposit_notifications::DefaultPendingDepositNotifier;
+pub use tracked_addresses::DefaultTrackedAddresses;
 
 pub struct State<T = DefaultTrackedAddresses, D = DefaultPendingDepositNotifier> {
     tracked_addresses: T,
@@ -15,7 +15,10 @@ pub struct State<T = DefaultTrackedAddresses, D = DefaultPendingDepositNotifier>
 
 impl<T: TrackedAddresses, D: PendingDepositNotifications> State<T, D> {
     pub fn new(tracked_addresses: T, pending_deposit_notifications: D) -> Self {
-        State { tracked_addresses, pending_deposit_notifications }
+        State {
+            tracked_addresses,
+            pending_deposit_notifications,
+        }
     }
 
     pub fn track_address(&mut self, address: String) {

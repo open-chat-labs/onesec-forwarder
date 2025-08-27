@@ -1,20 +1,29 @@
-use std::cell::RefCell;
+use crate::state::State;
 use candid::{CandidType, Principal};
 use serde::{Deserialize, Serialize};
-use crate::state::{DefaultPendingDepositNotifier, DefaultTrackedAddresses, State};
+use std::cell::RefCell;
+
+pub use crate::state::{DefaultPendingDepositNotifier, DefaultTrackedAddresses};
 
 mod state;
 
-const ONE_SEC_MINTER_CANISTER_ID: Principal = Principal::from_slice(&[0, 0, 0, 0, 2, 48, 11, 124, 1, 1]);
+const ONE_SEC_MINTER_CANISTER_ID: Principal =
+    Principal::from_slice(&[0, 0, 0, 0, 2, 48, 11, 124, 1, 1]);
 
 thread_local! {
     static STATE: RefCell<Option<State>> = RefCell::default();
 }
 
-pub fn init(tracked_addresses: DefaultTrackedAddresses, pending_deposit_notifications: DefaultPendingDepositNotifier) {
+pub fn init(
+    tracked_addresses: DefaultTrackedAddresses,
+    pending_deposit_notifications: DefaultPendingDepositNotifier,
+) {
     assert!(STATE.with_borrow(|s| s.is_none()));
 
-    STATE.set(Some(State::new(tracked_addresses, pending_deposit_notifications)));
+    STATE.set(Some(State::new(
+        tracked_addresses,
+        pending_deposit_notifications,
+    )));
 }
 
 pub fn track_address(address: String) {
@@ -23,6 +32,14 @@ pub fn track_address(address: String) {
 
 pub fn is_address_tracked(address: &str) -> bool {
     with_state(|s| s.is_tracked_address(address))
+}
+
+pub fn push_pending_deposit_notification(deposit_notification: PendingDepositNotification) {
+    with_state_mut(|s| s.push_pending_deposit_notification(deposit_notification));
+}
+
+pub fn pop_pending_deposit_notification() -> Option<PendingDepositNotification> {
+    with_state_mut(|s| s.pop_pending_deposit_notification())
 }
 
 fn with_state<F: FnOnce(&State) -> T, T>(f: F) -> T {
@@ -47,7 +64,12 @@ enum EvmChain {
 }
 
 trait Runtime {
-    fn call<A: CandidType, R: >(&self, canister_id: Principal, method_name: &str, args: A) -> impl Future<Output = R>;
+    fn call<A: CandidType, R>(
+        &self,
+        canister_id: Principal,
+        method_name: &str,
+        args: A,
+    ) -> impl Future<Output = R>;
 }
 
 #[test]
