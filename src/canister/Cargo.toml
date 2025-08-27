@@ -1,7 +1,11 @@
 [package]
-name = "one_sec_deposit_notifier_canister"
+name = "one_sec_deposit_notifier"
 version = "0.1.0"
 edition = "2024"
+
+[[bin]]
+name = "one_sec_deposit_notifier_canister"
+path = "src/canister/canister.rs"
 
 [dependencies]
 candid.workspace = true

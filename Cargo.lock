@@ -361,7 +361,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "one_sec_deposit_notifier_canister"
+name = "one_sec_deposit_notifier"
 version = "0.1.0"
 dependencies = [
  "candid",
