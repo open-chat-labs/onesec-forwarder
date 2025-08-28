@@ -1,9 +1,9 @@
 [package]
-name = "one_sec_forwarder_canister_types"
+name = "onesec_forwarder_canister_types"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 candid.workspace = true
-one_sec_forwarder_types.path = "../../types"
+onesec_forwarder_types.path = "../../types"
 serde.workspace = true

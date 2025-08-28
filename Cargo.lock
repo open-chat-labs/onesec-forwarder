@@ -357,46 +357,46 @@ dependencies = [
 ]
 
 [[package]]
-name = "one_sec_forwarder_canister"
+name = "onesec_forwarder_canister"
 version = "0.1.0"
 dependencies = [
  "candid",
  "ic-cdk",
- "one_sec_forwarder_canister_core",
- "one_sec_forwarder_canister_types",
+ "onesec_forwarder_canister_core",
+ "onesec_forwarder_canister_types",
 ]
 
 [[package]]
-name = "one_sec_forwarder_canister_core"
+name = "onesec_forwarder_canister_core"
 version = "0.1.0"
 dependencies = [
  "ic_principal",
- "one_sec_forwarder_types",
+ "onesec_forwarder_types",
  "serde",
 ]
 
 [[package]]
-name = "one_sec_forwarder_canister_types"
+name = "onesec_forwarder_canister_types"
 version = "0.1.0"
 dependencies = [
  "candid",
- "one_sec_forwarder_types",
+ "onesec_forwarder_types",
  "serde",
 ]
 
 [[package]]
-name = "one_sec_forwarder_constants"
+name = "onesec_forwarder_constants"
 version = "0.1.0"
 dependencies = [
  "ic_principal",
 ]
 
 [[package]]
-name = "one_sec_forwarder_lambda"
+name = "onesec_forwarder_lambda"
 version = "0.1.0"
 
 [[package]]
-name = "one_sec_forwarder_types"
+name = "onesec_forwarder_types"
 version = "0.1.0"
 dependencies = [
  "candid",

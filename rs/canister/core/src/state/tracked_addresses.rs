@@ -1,4 +1,4 @@
-use one_sec_forwarder_types::IcpAccount;
+use onesec_forwarder_types::IcpAccount;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 

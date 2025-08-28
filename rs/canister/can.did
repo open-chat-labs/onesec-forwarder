@@ -8,7 +8,7 @@ type IcrcAccount = record { owner : principal; subaccount : opt blob };
 type InitArgs = record { whitelisted_callers : vec principal };
 type InitOrUpgradeArgs = variant { Upgrade : record {}; Init : InitArgs };
 type IsForwardingArgs = record { evm_address : text };
-type NotifyMinterArgs = record { addresses : vec EvmAddress };
+type NotifyMinterArgs = record { evm_addresses : vec EvmAddress };
 service : (InitOrUpgradeArgs) -> {
   enable_forwarding : (EnableForwardingArgs) -> ();
   filter_addresses : (FilterAddressesArgs) -> (FilterAddressesResult) query;

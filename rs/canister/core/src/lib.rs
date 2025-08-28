@@ -1,6 +1,6 @@
 use crate::state::State;
 use ic_principal::Principal;
-use one_sec_forwarder_types::*;
+use onesec_forwarder_types::*;
 use std::cell::RefCell;
 use std::collections::HashSet;
 

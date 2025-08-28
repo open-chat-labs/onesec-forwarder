@@ -1,5 +1,5 @@
-use one_sec_forwarder_canister_core as lib;
-use one_sec_forwarder_canister_types::*;
+use onesec_forwarder_canister_core as lib;
+use onesec_forwarder_canister_types::*;
 
 mod enable_forwarding;
 mod filter_addresses;
