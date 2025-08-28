@@ -6,7 +6,6 @@ mod filter_addresses;
 mod guards;
 mod init;
 mod is_forwarding;
-mod notify_minter;
 
 fn main() {}
 

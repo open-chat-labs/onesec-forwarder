@@ -45,8 +45,3 @@ pub struct FilterAddressesResult {
 pub struct IsForwardingArgs {
     pub evm_address: String,
 }
-
-#[derive(CandidType, Serialize, Deserialize, Debug)]
-pub struct NotifyMinterArgs {
-    pub evm_addresses: Vec<EvmAddress>,
-}
