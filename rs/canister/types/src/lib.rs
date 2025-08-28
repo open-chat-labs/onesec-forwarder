@@ -1,7 +1,7 @@
 use candid::{CandidType, Principal};
 use serde::{Deserialize, Serialize};
 
-pub use one_sec_deposit_notifier_types::*;
+pub use one_sec_forwarder_types::*;
 
 #[derive(CandidType, Serialize, Deserialize, Debug)]
 pub enum InitOrUpgradeArgs {

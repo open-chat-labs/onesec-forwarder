@@ -1,5 +1,5 @@
 [package]
-name = "one_sec_deposit_notifier_types"
+name = "one_sec_forwarder_types"
 version = "0.1.0"
 edition = "2024"
 

@@ -1,9 +1,9 @@
 [package]
-name = "one_sec_deposit_notifier_canister_core"
+name = "one_sec_forwarder_canister_core"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 ic_principal.workspace = true
-one_sec_deposit_notifier_types.path = "../../types"
+one_sec_forwarder_types.path = "../../types"
 serde.workspace = true
