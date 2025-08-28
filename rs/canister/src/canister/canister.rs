@@ -9,3 +9,5 @@ mod notify_minter;
 mod track_address;
 
 fn main() {}
+
+ic_cdk::export_candid!();

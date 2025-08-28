@@ -1,0 +1,15 @@
+type EvmAddress = record { chain : EvmChain; address : text };
+type EvmChain = variant { Base; Ethereum; Arbitrum };
+type FilterAddressesArgs = record { addresses : vec text };
+type FilterAddressesResult = record { tracked_addresses : vec text };
+type InitArgs = record { whitelisted_callers : vec principal };
+type InitOrUpgradeArgs = variant { Upgrade : record {}; Init : InitArgs };
+type IsTrackingAddressArgs = record { address : text };
+type NotifyMinterArgs = record { addresses : vec EvmAddress };
+type TrackAddressArgs = record { address : text };
+service : (InitOrUpgradeArgs) -> {
+  filter_addresses : (FilterAddressesArgs) -> (FilterAddressesResult) query;
+  is_tracking_address : (IsTrackingAddressArgs) -> (bool) query;
+  notify_minter : (NotifyMinterArgs) -> ();
+  track_address : (TrackAddressArgs) -> ();
+}
