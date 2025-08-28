@@ -8,9 +8,6 @@ pub use crate::state::{DefaultNotifyMinterQueue, DefaultTrackedAddresses};
 
 mod state;
 
-const ONE_SEC_MINTER_CANISTER_ID: Principal =
-    Principal::from_slice(&[0, 0, 0, 0, 2, 48, 11, 124, 1, 1]);
-
 thread_local! {
     static STATE: RefCell<Option<State>> = RefCell::default();
 }
@@ -55,12 +52,4 @@ fn with_state<F: FnOnce(&State) -> T, T>(f: F) -> T {
 
 fn with_state_mut<F: FnOnce(&mut State) -> T, T>(f: F) -> T {
     STATE.with_borrow_mut(|s| f(s.as_mut().unwrap()))
-}
-
-#[test]
-fn one_sec_minter_canister_id() {
-    assert_eq!(
-        ONE_SEC_MINTER_CANISTER_ID,
-        Principal::from_text("5okwm-giaaa-aaaar-qbn6a-cai").unwrap()
-    )
 }

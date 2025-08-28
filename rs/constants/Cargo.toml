@@ -1,0 +1,7 @@
+[package]
+name = "one_sec_deposit_notifier_constants"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ic_principal.workspace = true
