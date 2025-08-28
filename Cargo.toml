@@ -1,7 +1,9 @@
 [workspace]
 members = [
     "rs/canister",
-    "rs/canister/src/canister/types", "rs/constants",
+    "rs/canister/core",
+    "rs/canister/types",
+    "rs/constants",
     "rs/lambda",
     "rs/types"
 ]

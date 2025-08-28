@@ -1,15 +1,10 @@
 [package]
-name = "one_sec_deposit_notifier"
+name = "one_sec_deposit_notifier_canister"
 version = "0.1.0"
 edition = "2024"
-
-[[bin]]
-name = "one_sec_deposit_notifier_canister"
-path = "src/canister/canister.rs"
 
 [dependencies]
 candid.workspace = true
 ic-cdk.workspace = true
-one_sec_deposit_notifier_canister_types.path = "./src/canister/types"
-one_sec_deposit_notifier_types.path = "../types"
-serde = { workspace = true, features = ["derive"] }
+one_sec_deposit_notifier_canister_core.path = "./core"
+one_sec_deposit_notifier_canister_types.path = "./types"

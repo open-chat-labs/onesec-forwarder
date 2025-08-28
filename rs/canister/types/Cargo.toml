@@ -5,5 +5,5 @@ edition = "2024"
 
 [dependencies]
 candid.workspace = true
+one_sec_deposit_notifier_types.path = "../../types"
 serde.workspace = true
-one_sec_deposit_notifier_types.path = "../../../../types"

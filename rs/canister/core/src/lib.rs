@@ -1,5 +1,5 @@
 use crate::state::State;
-use candid::Principal;
+use ic_principal::Principal;
 use one_sec_deposit_notifier_types::*;
 use std::cell::RefCell;
 use std::collections::HashSet;

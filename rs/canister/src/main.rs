@@ -1,4 +1,4 @@
-use one_sec_deposit_notifier as lib;
+use one_sec_deposit_notifier_canister_core as lib;
 use one_sec_deposit_notifier_canister_types::*;
 
 mod filter_addresses;

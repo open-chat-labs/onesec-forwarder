@@ -357,12 +357,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "one_sec_deposit_notifier"
+name = "one_sec_deposit_notifier_canister"
 version = "0.1.0"
 dependencies = [
  "candid",
  "ic-cdk",
+ "one_sec_deposit_notifier_canister_core",
  "one_sec_deposit_notifier_canister_types",
+]
+
+[[package]]
+name = "one_sec_deposit_notifier_canister_core"
+version = "0.1.0"
+dependencies = [
+ "ic_principal",
  "one_sec_deposit_notifier_types",
  "serde",
 ]
