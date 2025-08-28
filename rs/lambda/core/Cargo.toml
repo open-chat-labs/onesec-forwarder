@@ -1,0 +1,7 @@
+[package]
+name = "onesec_forwarder_lambda_core"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+onesec_forwarder_types.path = "../../types"

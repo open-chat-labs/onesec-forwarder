@@ -5,6 +5,7 @@ members = [
     "rs/canister/types",
     "rs/constants",
     "rs/lambda",
+    "rs/lambda/core",
     "rs/types"
 ]
 resolver = "3"
