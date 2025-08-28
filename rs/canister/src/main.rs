@@ -2,7 +2,7 @@ use onesec_forwarder_canister_core as lib;
 use onesec_forwarder_canister_types::*;
 
 mod enable_forwarding;
-mod filter_addresses;
+mod forwarding_addresses;
 mod guards;
 mod init;
 mod is_forwarding;

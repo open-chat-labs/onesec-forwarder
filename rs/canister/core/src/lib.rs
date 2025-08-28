@@ -23,8 +23,8 @@ pub fn enable_forwarding(icp_account: IcpAccount) {
     with_state_mut(|s| s.enable_forwarding(evm_address, icp_account));
 }
 
-pub fn is_forwarding(evm_address: &str) -> bool {
-    with_state(|s| s.is_forwarding(evm_address).is_some())
+pub fn is_forwarding(evm_address: &str) -> Option<IcpAccount> {
+    with_state(|s| s.is_forwarding(evm_address))
 }
 
 pub fn caller_is_whitelisted(caller: &Principal) -> bool {

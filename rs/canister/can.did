@@ -1,17 +1,17 @@
 type EnableForwardingArgs = record { icp_account : IcpAccount };
-type EvmAddress = record { chain : EvmChain; address : text };
-type EvmChain = variant { Base; Ethereum; Arbitrum };
-type FilterAddressesArgs = record { evm_addresses : vec text };
-type FilterAddressesResult = record { forwarding_addresses : vec text };
+type ForwardingAddressesArgs = record { evm_addresses : vec text };
+type ForwardingAddressesResult = record {
+  forwarding_addresses : vec record { text; IcpAccount };
+};
 type IcpAccount = variant { ICRC : IcrcAccount; AccountId : text };
 type IcrcAccount = record { owner : principal; subaccount : opt blob };
 type InitArgs = record { whitelisted_callers : vec principal };
 type InitOrUpgradeArgs = variant { Upgrade : record {}; Init : InitArgs };
 type IsForwardingArgs = record { evm_address : text };
-type NotifyMinterArgs = record { evm_addresses : vec EvmAddress };
 service : (InitOrUpgradeArgs) -> {
   enable_forwarding : (EnableForwardingArgs) -> ();
-  filter_addresses : (FilterAddressesArgs) -> (FilterAddressesResult) query;
+  forwarding_addresses : (ForwardingAddressesArgs) -> (
+      ForwardingAddressesResult,
+    ) query;
   is_forwarding : (IsForwardingArgs) -> (bool) query;
-  notify_minter : (NotifyMinterArgs) -> ();
 }
