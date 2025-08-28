@@ -1,12 +1,12 @@
 use one_sec_forwarder_canister_core as lib;
 use one_sec_forwarder_canister_types::*;
 
+mod enable_forwarding;
 mod filter_addresses;
 mod guards;
 mod init;
-mod is_tracking_address;
+mod is_forwarding;
 mod notify_minter;
-mod track_address;
 
 fn main() {}
 

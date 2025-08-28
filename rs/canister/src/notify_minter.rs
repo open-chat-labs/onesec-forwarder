@@ -4,7 +4,7 @@ use ic_cdk::update;
 
 #[update(guard = "caller_is_whitelisted")]
 fn notify_minter(args: NotifyMinterArgs) {
-    for address in args.addresses {
-        crate::lib::push_address_onto_notify_minter_queue(address);
+    for evm_address in args.evm_addresses {
+        crate::lib::push_onto_notify_minter_queue(evm_address);
     }
 }

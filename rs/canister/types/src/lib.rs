@@ -27,26 +27,26 @@ pub struct InitArgs {
 pub struct UpgradeArgs {}
 
 #[derive(CandidType, Serialize, Deserialize, Debug)]
+pub struct EnableForwardingArgs {
+    pub icp_account: IcpAccount,
+}
+
+#[derive(CandidType, Serialize, Deserialize, Debug)]
 pub struct FilterAddressesArgs {
-    pub addresses: Vec<String>,
+    pub evm_addresses: Vec<String>,
 }
 
 #[derive(CandidType, Serialize, Deserialize, Debug)]
 pub struct FilterAddressesResult {
-    pub tracked_addresses: Vec<String>,
+    pub forwarding_addresses: Vec<String>,
 }
 
 #[derive(CandidType, Serialize, Deserialize, Debug)]
-pub struct IsTrackingAddressArgs {
-    pub address: String,
+pub struct IsForwardingArgs {
+    pub evm_address: String,
 }
 
 #[derive(CandidType, Serialize, Deserialize, Debug)]
 pub struct NotifyMinterArgs {
-    pub addresses: Vec<EvmAddress>,
-}
-
-#[derive(CandidType, Serialize, Deserialize, Debug)]
-pub struct TrackAddressArgs {
-    pub address: String,
+    pub evm_addresses: Vec<EvmAddress>,
 }

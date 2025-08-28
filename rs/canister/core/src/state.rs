@@ -1,6 +1,6 @@
-use crate::EvmAddress;
 use crate::state::notify_minter_queue::NotifyMinterQueue;
 use crate::state::tracked_addresses::TrackedAddresses;
+use crate::{EvmAddress, IcpAccount};
 use ic_principal::Principal;
 use std::collections::HashSet;
 
@@ -29,19 +29,24 @@ impl<T: TrackedAddresses, Q: NotifyMinterQueue> State<T, Q> {
         }
     }
 
-    pub fn track_address(&mut self, address: String) {
-        self.tracked_addresses.push(address);
+    pub fn enable_forwarding(&mut self, evm_address: String, icp_account: IcpAccount) {
+        self.tracked_addresses.push(icp_account, evm_address);
     }
 
-    pub fn is_tracked_address(&self, address: &str) -> bool {
-        self.tracked_addresses.contains(address)
+    pub fn is_forwarding(&self, evm_address: &str) -> Option<IcpAccount> {
+        self.tracked_addresses.get(evm_address)
     }
 
-    pub fn push_address_onto_notify_minter_queue(&mut self, address: EvmAddress) {
-        self.notify_minter_queue.push(address);
+    pub fn push_onto_notify_minter_queue(&mut self, evm_address: EvmAddress) -> bool {
+        if let Some(icp_account) = self.tracked_addresses.get(&evm_address.address) {
+            self.notify_minter_queue.push(evm_address, icp_account);
+            true
+        } else {
+            false
+        }
     }
 
-    pub fn pop_address_from_notify_minter_queue(&mut self) -> Option<EvmAddress> {
+    pub fn pop_from_notify_minter_queue(&mut self) -> Option<(EvmAddress, IcpAccount)> {
         self.notify_minter_queue.pop()
     }
 
