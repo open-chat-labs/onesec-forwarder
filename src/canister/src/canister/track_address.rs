@@ -7,7 +7,7 @@ fn track_address(args: TrackAddressArgs) {
     crate::lib::track_address(args.address);
 }
 
-#[derive(CandidType, Serialize, Deserialize)]
+#[derive(CandidType, Serialize, Deserialize, Debug)]
 pub struct TrackAddressArgs {
     pub address: String,
 }

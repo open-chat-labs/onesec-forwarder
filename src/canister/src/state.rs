@@ -1,23 +1,31 @@
-use crate::PendingDepositNotification;
-use crate::state::pending_deposit_notifications::PendingDepositNotifications;
+use crate::EvmAddress;
+use crate::state::notify_minter_queue::NotifyMinterQueue;
 use crate::state::tracked_addresses::TrackedAddresses;
+use candid::Principal;
+use std::collections::HashSet;
 
-mod pending_deposit_notifications;
+mod notify_minter_queue;
 mod tracked_addresses;
 
-pub use pending_deposit_notifications::DefaultPendingDepositNotifier;
+pub use notify_minter_queue::DefaultNotifyMinterQueue;
 pub use tracked_addresses::DefaultTrackedAddresses;
 
-pub struct State<T = DefaultTrackedAddresses, D = DefaultPendingDepositNotifier> {
+pub struct State<T = DefaultTrackedAddresses, Q = DefaultNotifyMinterQueue> {
     tracked_addresses: T,
-    pending_deposit_notifications: D,
+    notify_minter_queue: Q,
+    whitelisted_callers: HashSet<Principal>,
 }
 
-impl<T: TrackedAddresses, D: PendingDepositNotifications> State<T, D> {
-    pub fn new(tracked_addresses: T, pending_deposit_notifications: D) -> Self {
+impl<T: TrackedAddresses, Q: NotifyMinterQueue> State<T, Q> {
+    pub fn new(
+        tracked_addresses: T,
+        notify_minter_queue: Q,
+        whitelisted_callers: HashSet<Principal>,
+    ) -> Self {
         State {
             tracked_addresses,
-            pending_deposit_notifications,
+            notify_minter_queue,
+            whitelisted_callers,
         }
     }
 
@@ -29,11 +37,15 @@ impl<T: TrackedAddresses, D: PendingDepositNotifications> State<T, D> {
         self.tracked_addresses.contains(address)
     }
 
-    pub fn push_pending_deposit_notification(&mut self, notification: PendingDepositNotification) {
-        self.pending_deposit_notifications.push(notification);
+    pub fn push_address_onto_notify_minter_queue(&mut self, address: EvmAddress) {
+        self.notify_minter_queue.push(address);
     }
 
-    pub fn pop_pending_deposit_notification(&mut self) -> Option<PendingDepositNotification> {
-        self.pending_deposit_notifications.pop()
+    pub fn pop_address_from_notify_minter_queue(&mut self) -> Option<EvmAddress> {
+        self.notify_minter_queue.pop()
+    }
+
+    pub fn caller_is_whitelisted(&self, caller: &Principal) -> bool {
+        self.whitelisted_callers.contains(caller)
     }
 }
