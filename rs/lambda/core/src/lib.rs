@@ -4,13 +4,13 @@ use std::collections::HashMap;
 pub struct Runner<
     F: OneSecForwarderClient,
     M: OneSecMinterClient,
-    C: ContractAddressesReader,
+    T: TokenContractAddressesReader,
     B: NextBlockHeightDb,
     E: EthRpcClient,
 > {
     onesec_forwarder_client: F,
     onesec_minter_client: M,
-    contract_addresses_reader: C,
+    contract_addresses_reader: T,
     next_block_height_db: B,
     eth_rpc_client: E,
 }
@@ -18,15 +18,15 @@ pub struct Runner<
 impl<
     F: OneSecForwarderClient,
     M: OneSecMinterClient,
-    C: ContractAddressesReader,
+    T: TokenContractAddressesReader,
     B: NextBlockHeightDb,
     E: EthRpcClient,
-> Runner<F, M, C, B, E>
+> Runner<F, M, T, B, E>
 {
     pub fn new(
         onesec_forwarder_client: F,
         onesec_minter_client: M,
-        contract_addresses_reader: C,
+        contract_addresses_reader: T,
         next_block_height_db: B,
         eth_rpc_client: E,
     ) -> Self {
@@ -43,33 +43,50 @@ impl<
         let start_block_height = self.next_block_height_db.get().await?;
         let end_block_height = start_block_height + 4;
         let contract_addresses = self.contract_addresses_reader.get().await?;
-        let recipient_addresses = self
+
+        let recipients = self
             .eth_rpc_client
-            .get_recipient_addresses(start_block_height, end_block_height, contract_addresses)
+            .get_recipients(
+                start_block_height,
+                end_block_height,
+                contract_addresses
+                    .iter()
+                    .map(|(_, c)| c.address.clone())
+                    .collect(),
+            )
             .await?;
-        if !recipient_addresses.is_empty() {
+
+        if !recipients.is_empty() {
             let forwarding_addresses = self
                 .onesec_forwarder_client
                 .forwarding_addresses(
-                    recipient_addresses
+                    recipients
                         .iter()
-                        .map(|a| a.address.clone())
+                        .map(|r| r.recipient_address.address.clone())
                         .collect(),
                 )
                 .await?;
 
             if !forwarding_addresses.is_empty() {
-                for evm_address in recipient_addresses {
-                    if let Some(icp_account) =
-                        forwarding_addresses.get(&evm_address.address).cloned()
+                let token_lookup: HashMap<_, _> = contract_addresses
+                    .into_iter()
+                    .map(|(t, c)| (c.address, t))
+                    .collect();
+
+                for recipient in recipients {
+                    if let Some(icp_account) = forwarding_addresses
+                        .get(&recipient.recipient_address.address)
+                        .cloned()
+                        && let Some(token) = token_lookup.get(&recipient.contract_address).copied()
                     {
                         self.onesec_minter_client
-                            .forward_evm_to_icp(evm_address, icp_account)
+                            .forward_evm_to_icp(token, recipient.recipient_address, icp_account)
                             .await?;
                     }
                 }
             }
         }
+
         self.next_block_height_db.set(end_block_height + 1).await?;
         Ok(())
     }
@@ -85,13 +102,14 @@ pub trait OneSecForwarderClient {
 pub trait OneSecMinterClient {
     fn forward_evm_to_icp(
         &self,
+        token: Token,
         evm_address: EvmAddress,
         icp_account: IcpAccount,
-    ) -> impl Future<Output = Result<Vec<String>, String>>;
+    ) -> impl Future<Output = Result<(), String>>;
 }
 
-pub trait ContractAddressesReader {
-    fn get(&self) -> impl Future<Output = Result<Vec<String>, String>>;
+pub trait TokenContractAddressesReader {
+    fn get(&self) -> impl Future<Output = Result<Vec<(Token, EvmAddress)>, String>>;
 }
 
 pub trait NextBlockHeightDb {
@@ -100,10 +118,15 @@ pub trait NextBlockHeightDb {
 }
 
 pub trait EthRpcClient {
-    fn get_recipient_addresses(
+    fn get_recipients(
         &self,
         from_block: u64,
         to_block: u64,
         contract_addresses: Vec<String>,
-    ) -> impl Future<Output = Result<Vec<EvmAddress>, String>>;
+    ) -> impl Future<Output = Result<Vec<RecipientContractAddress>, String>>;
+}
+
+pub struct RecipientContractAddress {
+    pub recipient_address: EvmAddress,
+    pub contract_address: String,
 }

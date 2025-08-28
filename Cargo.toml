@@ -5,6 +5,7 @@ members = [
     "rs/canister/types",
     "rs/constants",
     "rs/lambda",
+    "rs/lambda/canister_client",
     "rs/lambda/core",
     "rs/types"
 ]
@@ -12,6 +13,7 @@ resolver = "3"
 
 [workspace.dependencies]
 candid = "0.10"
+ic-agent = "0.44.0"
 ic-cdk = "0.18"
 ic_principal = "0.1.1"
 serde = "1"

@@ -1,0 +1,11 @@
+[package]
+name = "onesec_forwarder_lembda_canister_client"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+candid.workspace = true
+ic-agent.workspace = true
+onesec_forwarder_lambda_core.path = "../core"
+onesec_forwarder_types.path = "../../types"
+serde.workspace = true
