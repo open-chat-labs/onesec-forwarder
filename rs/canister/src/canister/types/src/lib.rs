@@ -1,6 +1,7 @@
 use candid::{CandidType, Principal};
-use one_sec_deposit_notifier_types::EvmAddress;
 use serde::{Deserialize, Serialize};
+
+pub use one_sec_deposit_notifier_types::*;
 
 #[derive(CandidType, Serialize, Deserialize, Debug)]
 pub enum InitOrUpgradeArgs {
