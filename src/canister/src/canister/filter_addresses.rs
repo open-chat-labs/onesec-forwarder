@@ -1,6 +1,6 @@
 use crate::guards::caller_is_whitelisted;
+use crate::{FilterAddressesArgs, FilterAddressesResult};
 use ic_cdk::query;
-use one_sec_deposit_notifier_canister_types::{FilterAddressesArgs, FilterAddressesResult};
 
 #[query(guard = "caller_is_whitelisted")]
 fn filter_addresses(args: FilterAddressesArgs) -> FilterAddressesResult {

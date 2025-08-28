@@ -1,6 +1,6 @@
+use crate::InitOrUpgradeArgs;
 use crate::lib::{DefaultNotifyMinterQueue, DefaultTrackedAddresses};
 use ic_cdk::init;
-use one_sec_deposit_notifier_canister_types::InitOrUpgradeArgs;
 
 #[init]
 fn init(args: InitOrUpgradeArgs) {

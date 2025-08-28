@@ -1,9 +1,10 @@
 use crate::state::State;
-pub use crate::state::{DefaultNotifyMinterQueue, DefaultTrackedAddresses};
 use candid::Principal;
-use one_sec_deposit_notifier_types::EvmAddress;
+use one_sec_deposit_notifier_types::*;
 use std::cell::RefCell;
 use std::collections::HashSet;
+
+pub use crate::state::{DefaultNotifyMinterQueue, DefaultTrackedAddresses};
 
 mod state;
 
