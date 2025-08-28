@@ -1,7 +1,7 @@
 use crate::state::State;
 pub use crate::state::{DefaultNotifyMinterQueue, DefaultTrackedAddresses};
-use candid::{CandidType, Principal};
-use serde::{Deserialize, Serialize};
+use candid::Principal;
+use one_sec_deposit_notifier_types::EvmAddress;
 use std::cell::RefCell;
 use std::collections::HashSet;
 
@@ -54,28 +54,6 @@ fn with_state<F: FnOnce(&State) -> T, T>(f: F) -> T {
 
 fn with_state_mut<F: FnOnce(&mut State) -> T, T>(f: F) -> T {
     STATE.with_borrow_mut(|s| f(s.as_mut().unwrap()))
-}
-
-#[derive(CandidType, Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
-pub struct EvmAddress {
-    chain: EvmChain,
-    address: String,
-}
-
-#[derive(CandidType, Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq)]
-pub enum EvmChain {
-    Ethereum,
-    Arbitrum,
-    Base,
-}
-
-trait Runtime {
-    fn call<A: CandidType, R>(
-        &self,
-        canister_id: Principal,
-        method_name: &str,
-        args: A,
-    ) -> impl Future<Output = R>;
 }
 
 #[test]

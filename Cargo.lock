@@ -366,6 +366,25 @@ version = "0.1.0"
 dependencies = [
  "candid",
  "ic-cdk",
+ "one_sec_deposit_notifier_canister_types",
+ "one_sec_deposit_notifier_types",
+ "serde",
+]
+
+[[package]]
+name = "one_sec_deposit_notifier_canister_types"
+version = "0.1.0"
+dependencies = [
+ "candid",
+ "one_sec_deposit_notifier_types",
+ "serde",
+]
+
+[[package]]
+name = "one_sec_deposit_notifier_types"
+version = "0.1.0"
+dependencies = [
+ "candid",
  "serde",
 ]
 

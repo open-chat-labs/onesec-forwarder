@@ -1,7 +1,6 @@
 use crate::guards::caller_is_whitelisted;
-use candid::CandidType;
 use ic_cdk::query;
-use serde::{Deserialize, Serialize};
+use one_sec_deposit_notifier_canister_types::{FilterAddressesArgs, FilterAddressesResult};
 
 #[query(guard = "caller_is_whitelisted")]
 fn filter_addresses(args: FilterAddressesArgs) -> FilterAddressesResult {
@@ -12,14 +11,4 @@ fn filter_addresses(args: FilterAddressesArgs) -> FilterAddressesResult {
         .collect();
 
     FilterAddressesResult { tracked_addresses }
-}
-
-#[derive(CandidType, Serialize, Deserialize, Debug)]
-pub struct FilterAddressesArgs {
-    pub addresses: Vec<String>,
-}
-
-#[derive(CandidType, Serialize, Deserialize, Debug)]
-pub struct FilterAddressesResult {
-    pub tracked_addresses: Vec<String>,
 }

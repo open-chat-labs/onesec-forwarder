@@ -1,7 +1,6 @@
 use crate::lib::{DefaultNotifyMinterQueue, DefaultTrackedAddresses};
-use candid::{CandidType, Principal};
 use ic_cdk::init;
-use serde::{Deserialize, Serialize};
+use one_sec_deposit_notifier_canister_types::InitOrUpgradeArgs;
 
 #[init]
 fn init(args: InitOrUpgradeArgs) {
@@ -12,26 +11,3 @@ fn init(args: InitOrUpgradeArgs) {
         init_args.whitelisted_callers.into_iter().collect(),
     );
 }
-
-#[derive(CandidType, Serialize, Deserialize, Debug)]
-pub enum InitOrUpgradeArgs {
-    Init(InitArgs),
-    Upgrade(UpgradeArgs),
-}
-
-impl InitOrUpgradeArgs {
-    fn init(self) -> InitArgs {
-        let InitOrUpgradeArgs::Init(init) = self else {
-            panic!("Not of type Init");
-        };
-        init
-    }
-}
-
-#[derive(CandidType, Serialize, Deserialize, Debug)]
-pub struct InitArgs {
-    pub whitelisted_callers: Vec<Principal>,
-}
-
-#[derive(CandidType, Serialize, Deserialize, Debug)]
-pub struct UpgradeArgs {}

@@ -1,7 +1,7 @@
-use crate::EvmAddress;
 use crate::state::notify_minter_queue::NotifyMinterQueue;
 use crate::state::tracked_addresses::TrackedAddresses;
 use candid::Principal;
+use one_sec_deposit_notifier_types::EvmAddress;
 use std::collections::HashSet;
 
 mod notify_minter_queue;

@@ -1,7 +1,9 @@
 [workspace]
 members = [
     "src/canister",
-    "src/lambda"
+    "src/canister/src/canister/types",
+    "src/lambda",
+    "src/types"
 ]
 resolver = "3"
 
