@@ -5,13 +5,13 @@ pub struct Runner<
     F: OneSecForwarderClient,
     M: OneSecMinterClient,
     T: TokenContractAddressesReader,
-    B: NextBlockHeightDb,
+    B: NextBlockHeightStore,
     E: EthRpcClient,
 > {
     onesec_forwarder_client: F,
     onesec_minter_client: M,
     contract_addresses_reader: T,
-    next_block_height_db: B,
+    next_block_height_store: B,
     eth_rpc_client: E,
 }
 
@@ -19,7 +19,7 @@ impl<
     F: OneSecForwarderClient,
     M: OneSecMinterClient,
     T: TokenContractAddressesReader,
-    B: NextBlockHeightDb,
+    B: NextBlockHeightStore,
     E: EthRpcClient,
 > Runner<F, M, T, B, E>
 {
@@ -27,20 +27,20 @@ impl<
         onesec_forwarder_client: F,
         onesec_minter_client: M,
         contract_addresses_reader: T,
-        next_block_height_db: B,
+        next_block_height_store: B,
         eth_rpc_client: E,
     ) -> Self {
         Runner {
             onesec_forwarder_client,
             onesec_minter_client,
             contract_addresses_reader,
-            next_block_height_db,
+            next_block_height_store,
             eth_rpc_client,
         }
     }
 
     pub async fn run(mut self) -> Result<(), String> {
-        let start_block_height = self.next_block_height_db.get().await?;
+        let start_block_height = self.next_block_height_store.get().await?;
         let end_block_height = start_block_height + 4;
         let contract_addresses = self.contract_addresses_reader.get().await?;
 
@@ -87,7 +87,9 @@ impl<
             }
         }
 
-        self.next_block_height_db.set(end_block_height + 1).await?;
+        self.next_block_height_store
+            .set(end_block_height + 1)
+            .await?;
         Ok(())
     }
 }
@@ -112,7 +114,7 @@ pub trait TokenContractAddressesReader {
     fn get(&self) -> impl Future<Output = Result<Vec<(Token, EvmAddress)>, String>>;
 }
 
-pub trait NextBlockHeightDb {
+pub trait NextBlockHeightStore {
     fn get(&self) -> impl Future<Output = Result<u64, String>>;
     fn set(&mut self, height: u64) -> impl Future<Output = Result<(), String>>;
 }

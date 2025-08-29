@@ -7,6 +7,7 @@ members = [
     "rs/lambda",
     "rs/lambda/canister_client",
     "rs/lambda/core",
+    "rs/lambda/parameter_store_client",
     "rs/types"
 ]
 resolver = "3"
