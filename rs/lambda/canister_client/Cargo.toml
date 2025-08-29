@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 candid.workspace = true
 ic-agent.workspace = true
+onesec_forwarder_canister_types.path = "../../canister/types"
 onesec_forwarder_lambda_core.path = "../core"
 onesec_forwarder_types.path = "../../types"
 serde.workspace = true

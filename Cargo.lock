@@ -1461,6 +1461,7 @@ version = "0.1.0"
 dependencies = [
  "candid",
  "ic-agent",
+ "onesec_forwarder_canister_types",
  "onesec_forwarder_lambda_core",
  "onesec_forwarder_types",
  "serde",

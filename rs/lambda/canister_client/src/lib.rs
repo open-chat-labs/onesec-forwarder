@@ -1,16 +1,29 @@
 use crate::onesec_minter_canister::GetMetadataResponse;
 use candid::{CandidType, Principal};
-use onesec_forwarder_lambda_core::{OneSecMinterClient, TokenContractAddressesReader};
+use onesec_forwarder_canister_types::{ForwardingAddressesArgs, ForwardingAddressesResult};
+use onesec_forwarder_lambda_core::{
+    OneSecForwarderClient, OneSecMinterClient, TokenContractAddressesReader,
+};
 use onesec_forwarder_types::*;
 use serde::Deserialize;
+use serde::de::DeserializeOwned;
+use std::collections::HashMap;
 use std::rc::Rc;
 
-pub struct OneSecMinterAgent {
+pub struct CanisterClient {
     agent: Rc<ic_agent::Agent>,
     canister_id: Principal,
 }
 
-impl OneSecMinterClient for OneSecMinterAgent {
+fn encode_args<A: CandidType>(args: A) -> Vec<u8> {
+    candid::encode_one(args).unwrap()
+}
+
+fn decode_response<R: CandidType + DeserializeOwned>(bytes: &[u8]) -> Result<R, String> {
+    candid::decode_one(bytes).map_err(|e| e.to_string())
+}
+
+impl OneSecMinterClient for CanisterClient {
     async fn forward_evm_to_icp(
         &self,
         token: Token,
@@ -26,7 +39,7 @@ impl OneSecMinterClient for OneSecMinterAgent {
 
         self.agent
             .update(&self.canister_id, "forward_evm_to_icp")
-            .with_arg(candid::encode_one(&args).unwrap())
+            .with_arg(encode_args(args))
             .await
             .map_err(|e| e.to_string())?;
 
@@ -34,18 +47,16 @@ impl OneSecMinterClient for OneSecMinterAgent {
     }
 }
 
-impl TokenContractAddressesReader for OneSecMinterAgent {
+impl TokenContractAddressesReader for CanisterClient {
     async fn get(&self) -> Result<Vec<(Token, EvmAddress)>, String> {
-        let response_bytes = self
+        let response: GetMetadataResponse = self
             .agent
             .query(&self.canister_id, "get_metadata")
             .await
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| e.to_string())
+            .and_then(|r| decode_response::<GetMetadataResponse>(&r))?;
 
-        let metadata: GetMetadataResponse =
-            candid::decode_one(&response_bytes).map_err(|e| e.to_string())?;
-
-        Ok(metadata
+        Ok(response
             .tokens
             .into_iter()
             .filter_map(|t| {
@@ -61,6 +72,23 @@ impl TokenContractAddressesReader for OneSecMinterAgent {
                 ))
             })
             .collect())
+    }
+}
+
+impl OneSecForwarderClient for CanisterClient {
+    async fn forwarding_addresses(
+        &self,
+        evm_addresses: Vec<String>,
+    ) -> Result<HashMap<String, IcpAccount>, String> {
+        let args = ForwardingAddressesArgs { evm_addresses };
+
+        self.agent
+            .query(&self.canister_id, "forwarding_addresses")
+            .with_arg(encode_args(args))
+            .await
+            .map_err(|e| e.to_string())
+            .and_then(|r| decode_response::<ForwardingAddressesResult>(&r))
+            .map(|r| r.forwarding_addresses)
     }
 }
 
