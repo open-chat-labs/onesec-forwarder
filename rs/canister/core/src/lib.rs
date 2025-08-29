@@ -1,8 +1,6 @@
 use crate::state::State;
-use ic_principal::Principal;
 use onesec_forwarder_types::*;
 use std::cell::RefCell;
-use std::collections::HashSet;
 
 pub use crate::state::DefaultTrackedAddresses;
 
@@ -12,10 +10,10 @@ thread_local! {
     static STATE: RefCell<Option<State>> = RefCell::default();
 }
 
-pub fn init(tracked_addresses: DefaultTrackedAddresses, whitelisted_callers: HashSet<Principal>) {
+pub fn init(tracked_addresses: DefaultTrackedAddresses) {
     assert!(STATE.with_borrow(|s| s.is_none()));
 
-    STATE.set(Some(State::new(tracked_addresses, whitelisted_callers)));
+    STATE.set(Some(State::new(tracked_addresses)));
 }
 
 pub fn enable_forwarding(icp_account: IcpAccount) {
@@ -25,10 +23,6 @@ pub fn enable_forwarding(icp_account: IcpAccount) {
 
 pub fn is_forwarding(evm_address: &str) -> Option<IcpAccount> {
     with_state(|s| s.is_forwarding(evm_address))
-}
-
-pub fn caller_is_whitelisted(caller: &Principal) -> bool {
-    with_state(|s| s.caller_is_whitelisted(caller))
 }
 
 fn calculate_forwarding_address(_icp_account: &IcpAccount) -> String {

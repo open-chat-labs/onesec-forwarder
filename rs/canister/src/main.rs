@@ -3,7 +3,6 @@ use onesec_forwarder_canister_types::*;
 
 mod enable_forwarding;
 mod forwarding_addresses;
-mod guards;
 mod init;
 mod is_forwarding;
 
