@@ -40,8 +40,11 @@ impl<
     }
 
     pub async fn run(mut self) -> Result<(), String> {
+        // Get the ERC20 token contract addresses per chain
         let token_contract_addresses = self.token_contract_addresses_reader.get().await?;
 
+        // For each chain, get the list of addresses that have received any of the ERC20 tokens we
+        // care about
         let per_chain_results: Vec<(EvmChain, GetRecipientsForChainResult)> =
             futures::future::try_join_all(token_contract_addresses.into_iter().map(
                 async |(chain, addresses)| {
@@ -54,6 +57,7 @@ impl<
 
         self.process_results(&per_chain_results).await?;
 
+        // Update the `next_block_height` value for each chain
         for (
             chain,
             GetRecipientsForChainResult {
@@ -112,6 +116,7 @@ impl<
         &self,
         per_chain_results: &[(EvmChain, GetRecipientsForChainResult)],
     ) -> Result<(), String> {
+        // Exit early if there have been no recipients for any of the ERC20 tokens
         if per_chain_results
             .iter()
             .all(|(_, r)| r.recipients.is_empty())
@@ -127,6 +132,8 @@ impl<
             .into_iter()
             .collect();
 
+        // Query the OneSecForwarder canister to filter out the addresses that are enabled for
+        // forwarding
         let forwarding_addresses = self
             .onesec_forwarder_client
             .forwarding_addresses(unique_recipient_addresses)
@@ -136,6 +143,8 @@ impl<
             return Ok(());
         }
 
+        // For each forwarding address, find the relevent deposits and notify the OneSecMinter
+        // canister of each one
         for (evm_address, icp_account) in forwarding_addresses {
             for (chain, GetRecipientsForChainResult { recipients, .. }) in per_chain_results.iter()
             {
