@@ -6,4 +6,5 @@ edition = "2024"
 [dependencies]
 ic_principal.workspace = true
 onesec_forwarder_types.path = "../../types"
+onesec_forwarding_address.workspace = true
 serde.workspace = true

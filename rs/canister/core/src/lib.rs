@@ -25,8 +25,19 @@ pub fn is_forwarding(evm_address: &str) -> Option<IcpAccount> {
     with_state(|s| s.is_forwarding(evm_address))
 }
 
-fn calculate_forwarding_address(_icp_account: &IcpAccount) -> String {
-    "TODO".to_string()
+fn calculate_forwarding_address(icp_account: &IcpAccount) -> String {
+    let key = onesec_forwarding_address::MAINNET_KEY_ID;
+    match icp_account {
+        IcpAccount::ICRC(icrc) => onesec_forwarding_address::forwarding_address_from_icrc(
+            key,
+            icrc.owner.as_slice().to_vec(),
+            icrc.subaccount.map(|s| s.to_vec()).unwrap_or_default(),
+        ),
+        IcpAccount::AccountId(id) => onesec_forwarding_address::forwarding_address_from_account_id(
+            key,
+            id.as_bytes().to_vec(),
+        ),
+    }
 }
 
 fn with_state<F: FnOnce(&State) -> T, T>(f: F) -> T {
