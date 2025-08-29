@@ -1,5 +1,5 @@
 use onesec_forwarder_types::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 pub struct Runner<
     F: OneSecForwarderClient,
@@ -10,7 +10,7 @@ pub struct Runner<
 > {
     onesec_forwarder_client: F,
     onesec_minter_client: M,
-    contract_addresses_reader: T,
+    token_contract_addresses_reader: T,
     next_block_height_store: B,
     eth_rpc_client: E,
 }
@@ -26,70 +26,137 @@ impl<
     pub fn new(
         onesec_forwarder_client: F,
         onesec_minter_client: M,
-        contract_addresses_reader: T,
+        token_contract_addresses_reader: T,
         next_block_height_store: B,
         eth_rpc_client: E,
     ) -> Self {
         Runner {
             onesec_forwarder_client,
             onesec_minter_client,
-            contract_addresses_reader,
+            token_contract_addresses_reader,
             next_block_height_store,
             eth_rpc_client,
         }
     }
 
     pub async fn run(mut self) -> Result<(), String> {
-        let start_block_height = self.next_block_height_store.get().await?;
-        let end_block_height = start_block_height + 4;
-        let contract_addresses = self.contract_addresses_reader.get().await?;
+        let token_contract_addresses = self.token_contract_addresses_reader.get().await?;
 
-        let recipients = self
-            .eth_rpc_client
-            .get_recipients(
-                start_block_height,
-                end_block_height,
-                contract_addresses
-                    .iter()
-                    .map(|(_, c)| c.address.clone())
-                    .collect(),
-            )
+        let per_chain_results: Vec<(EvmChain, GetRecipientsForChainResult)> =
+            futures::future::try_join_all(token_contract_addresses.into_iter().map(
+                async |(chain, addresses)| {
+                    self.get_recipients_for_chain(chain, addresses)
+                        .await
+                        .map(|r| (chain, r))
+                },
+            ))
             .await?;
 
-        if !recipients.is_empty() {
-            let forwarding_addresses = self
-                .onesec_forwarder_client
-                .forwarding_addresses(
-                    recipients
-                        .iter()
-                        .map(|r| r.recipient_address.address.clone())
-                        .collect(),
-                )
+        self.process_results(&per_chain_results).await?;
+
+        for (
+            chain,
+            GetRecipientsForChainResult {
+                next_block_height, ..
+            },
+        ) in per_chain_results
+        {
+            self.next_block_height_store
+                .set(chain, next_block_height)
                 .await?;
+        }
 
-            if !forwarding_addresses.is_empty() {
-                let token_lookup: HashMap<_, _> = contract_addresses
+        Ok(())
+    }
+
+    async fn get_recipients_for_chain(
+        &self,
+        chain: EvmChain,
+        token_contract_addresses: Vec<TokenContractAddress>,
+    ) -> Result<GetRecipientsForChainResult, String> {
+        let start_block_height = self.next_block_height_store.get(chain).await?;
+        let end_block_height = start_block_height + 4;
+        let token_lookup: HashMap<_, _> = token_contract_addresses
+            .iter()
+            .map(|a| (a.address.clone(), a.token))
+            .collect();
+
+        self.eth_rpc_client
+            .get_recipients(
+                chain,
+                start_block_height,
+                end_block_height,
+                token_contract_addresses
+                    .iter()
+                    .map(|a| a.address.clone())
+                    .collect(),
+            )
+            .await
+            .map(|recipients| GetRecipientsForChainResult {
+                recipients: recipients
                     .into_iter()
-                    .map(|(t, c)| (c.address, t))
-                    .collect();
+                    .filter_map(|r| {
+                        token_lookup
+                            .get(&r.contract_address)
+                            .map(|t| TokenRecipientAddress {
+                                token: *t,
+                                recipient_address: r.recipient_address,
+                            })
+                    })
+                    .collect(),
+                next_block_height: end_block_height + 1,
+            })
+    }
 
-                for recipient in recipients {
-                    if let Some(icp_account) = forwarding_addresses
-                        .get(&recipient.recipient_address.address)
-                        .cloned()
-                        && let Some(token) = token_lookup.get(&recipient.contract_address).copied()
-                    {
-                        self.onesec_minter_client
-                            .forward_evm_to_icp(token, recipient.recipient_address, icp_account)
-                            .await?;
-                    }
+    async fn process_results(
+        &self,
+        per_chain_results: &[(EvmChain, GetRecipientsForChainResult)],
+    ) -> Result<(), String> {
+        if per_chain_results
+            .iter()
+            .all(|(_, r)| r.recipients.is_empty())
+        {
+            return Ok(());
+        }
+
+        let unique_recipient_addresses = per_chain_results
+            .iter()
+            .flat_map(|(_, r)| r.recipients.iter())
+            .map(|r| r.recipient_address.clone())
+            .collect::<HashSet<_>>()
+            .into_iter()
+            .collect();
+
+        let forwarding_addresses = self
+            .onesec_forwarder_client
+            .forwarding_addresses(unique_recipient_addresses)
+            .await?;
+
+        if forwarding_addresses.is_empty() {
+            return Ok(());
+        }
+
+        for (evm_address, icp_account) in forwarding_addresses {
+            for (chain, GetRecipientsForChainResult { recipients, .. }) in per_chain_results.iter()
+            {
+                for recipient in recipients
+                    .iter()
+                    .filter(|r| r.recipient_address == evm_address)
+                {
+                    self.onesec_minter_client
+                        .forward_evm_to_icp(
+                            recipient.token,
+                            EvmAddress {
+                                chain: *chain,
+                                address: evm_address.clone(),
+                            },
+                            icp_account.clone(),
+                        )
+                        .await?;
                 }
             }
         }
 
-        self.next_block_height_store
-            .set(end_block_height + 1)
-            .await?;
         Ok(())
     }
 }
@@ -111,17 +178,20 @@ pub trait OneSecMinterClient {
 }
 
 pub trait TokenContractAddressesReader {
-    fn get(&self) -> impl Future<Output = Result<Vec<(Token, EvmAddress)>, String>>;
+    fn get(
+        &self,
+    ) -> impl Future<Output = Result<HashMap<EvmChain, Vec<TokenContractAddress>>, String>>;
 }
 
 pub trait NextBlockHeightStore {
-    fn get(&self) -> impl Future<Output = Result<u64, String>>;
-    fn set(&mut self, height: u64) -> impl Future<Output = Result<(), String>>;
+    fn get(&self, chain: EvmChain) -> impl Future<Output = Result<u64, String>>;
+    fn set(&mut self, chain: EvmChain, height: u64) -> impl Future<Output = Result<(), String>>;
 }
 
 pub trait EthRpcClient {
     fn get_recipients(
         &self,
+        chain: EvmChain,
         from_block: u64,
         to_block: u64,
         contract_addresses: Vec<String>,
@@ -129,6 +199,16 @@ pub trait EthRpcClient {
 }
 
 pub struct RecipientContractAddress {
-    pub recipient_address: EvmAddress,
     pub contract_address: String,
+    pub recipient_address: String,
+}
+
+struct GetRecipientsForChainResult {
+    next_block_height: u64,
+    recipients: Vec<TokenRecipientAddress>,
+}
+
+struct TokenRecipientAddress {
+    pub token: Token,
+    pub recipient_address: String,
 }

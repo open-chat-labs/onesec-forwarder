@@ -1,8 +1,7 @@
 use aws_sdk_ssm::Client;
 use onesec_forwarder_lambda_core::NextBlockHeightStore;
+use onesec_forwarder_types::EvmChain;
 use std::str::FromStr;
-
-const PARAMETER_NAME: &str = "next_block_height";
 
 pub struct ParameterStoreClient {
     aws_client: aws_sdk_ssm::Client,
@@ -12,14 +11,18 @@ impl ParameterStoreClient {
     pub fn new(aws_client: Client) -> Self {
         ParameterStoreClient { aws_client }
     }
+
+    fn parameter_name(&self, chain: EvmChain) -> String {
+        format!("next_block_height_{chain}")
+    }
 }
 
 impl NextBlockHeightStore for ParameterStoreClient {
-    async fn get(&self) -> Result<u64, String> {
+    async fn get(&self, chain: EvmChain) -> Result<u64, String> {
         let get_parameter_response = self
             .aws_client
             .get_parameter()
-            .name(PARAMETER_NAME)
+            .name(self.parameter_name(chain))
             .send()
             .await
             .map_err(|e| e.to_string())?;
@@ -32,10 +35,10 @@ impl NextBlockHeightStore for ParameterStoreClient {
         u64::from_str(&value).map_err(|e| e.to_string())
     }
 
-    async fn set(&mut self, value: u64) -> Result<(), String> {
+    async fn set(&mut self, chain: EvmChain, value: u64) -> Result<(), String> {
         self.aws_client
             .put_parameter()
-            .name(PARAMETER_NAME)
+            .name(self.parameter_name(chain))
             .value(value.to_string())
             .send()
             .await

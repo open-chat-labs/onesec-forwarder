@@ -48,7 +48,7 @@ impl OneSecMinterClient for CanisterClient {
 }
 
 impl TokenContractAddressesReader for CanisterClient {
-    async fn get(&self) -> Result<Vec<(Token, EvmAddress)>, String> {
+    async fn get(&self) -> Result<HashMap<EvmChain, Vec<TokenContractAddress>>, String> {
         let response: GetMetadataResponse = self
             .agent
             .query(&self.canister_id, "get_metadata")
@@ -56,22 +56,20 @@ impl TokenContractAddressesReader for CanisterClient {
             .map_err(|e| e.to_string())
             .and_then(|r| decode_response::<GetMetadataResponse>(&r))?;
 
-        Ok(response
-            .tokens
-            .into_iter()
-            .filter_map(|t| {
-                let token = t.token?;
-                let chain = t.chain?;
-
-                Some((
-                    token,
-                    EvmAddress {
-                        chain,
-                        address: t.contract,
-                    },
-                ))
-            })
-            .collect())
+        let mut map: HashMap<EvmChain, Vec<TokenContractAddress>> = HashMap::new();
+        for token_metadata in response.tokens {
+            let Some(chain) = token_metadata.chain else {
+                continue;
+            };
+            let Some(token) = token_metadata.token else {
+                continue;
+            };
+            map.entry(chain).or_default().push(TokenContractAddress {
+                token,
+                address: token_metadata.contract,
+            });
+        }
+        Ok(map)
     }
 }
 
