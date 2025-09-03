@@ -11,6 +11,7 @@ onesec_forwarder_lambda_canister_client.path = "./canister_client"
 onesec_forwarder_lambda_core.path = "./core"
 onesec_forwarder_lambda_evm_rpc_client.path = "./eth_rpc_client"
 onesec_forwarder_lambda_parameter_store_client.path = "./parameter_store_client"
+openssl = { workspace = true, features = ["vendored"] }
 serde.workspace = true
 tokio = { workspace = true, features = ["macros"] }
 tracing.workspace = true
