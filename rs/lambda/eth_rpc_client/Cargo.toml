@@ -1,0 +1,12 @@
+[package]
+name = "onesec_forwarder_lambda_evm_rpc_client"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+onesec_forwarder_lambda_core.path = "../core"
+onesec_forwarder_types.path = "../../types"
+reqwest = { workspace = true, features = ["json"] }
+serde.workspace = true
+serde_json.workspace = true
+url.workspace = true
