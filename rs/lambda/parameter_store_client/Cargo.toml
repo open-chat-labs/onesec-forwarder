@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-aws-sdk-ssm = "1.91.0"
+aws-sdk-ssm.workspace = true
+aws-types.workspace = true
 onesec_forwarder_lambda_core.path = "../core"
 onesec_forwarder_types.path = "../../types"

@@ -1,4 +1,5 @@
 use aws_sdk_ssm::Client;
+use aws_types::SdkConfig;
 use onesec_forwarder_lambda_core::NextBlockHeightStore;
 use onesec_forwarder_types::EvmChain;
 use std::str::FromStr;
@@ -8,8 +9,10 @@ pub struct ParameterStoreClient {
 }
 
 impl ParameterStoreClient {
-    pub fn new(aws_client: Client) -> Self {
-        ParameterStoreClient { aws_client }
+    pub fn new(aws_config: &SdkConfig) -> Self {
+        ParameterStoreClient {
+            aws_client: Client::new(aws_config),
+        }
     }
 
     fn parameter_name(&self, chain: EvmChain) -> String {

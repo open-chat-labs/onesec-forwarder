@@ -1,5 +1,7 @@
 use crate::onesec_minter_canister::GetMetadataResponse;
 use candid::{CandidType, Principal};
+use ic_agent::Agent;
+use ic_agent::agent::AgentBuilder;
 use onesec_forwarder_canister_types::{ForwardingAddressesArgs, ForwardingAddressesResult};
 use onesec_forwarder_lambda_core::{
     OneSecForwarderClient, OneSecMinterClient, TokenContractAddressesReader,
@@ -8,11 +10,20 @@ use onesec_forwarder_types::*;
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
 use std::collections::HashMap;
-use std::rc::Rc;
 
+#[derive(Clone)]
 pub struct CanisterClient {
-    agent: Rc<ic_agent::Agent>,
+    agent: Agent,
     canister_id: Principal,
+}
+
+impl CanisterClient {
+    pub fn new(canister_id: Principal) -> Self {
+        CanisterClient {
+            agent: AgentBuilder::default().build().unwrap(),
+            canister_id,
+        }
+    }
 }
 
 fn encode_args<A: CandidType>(args: A) -> Vec<u8> {

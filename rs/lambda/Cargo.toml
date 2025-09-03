@@ -4,3 +4,13 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+aws-config.workspace = true
+ic_principal.workspace = true
+lambda_runtime.workspace = true
+onesec_forwarder_lambda_canister_client.path = "./canister_client"
+onesec_forwarder_lambda_core.path = "./core"
+onesec_forwarder_lambda_evm_rpc_client.path = "./eth_rpc_client"
+onesec_forwarder_lambda_parameter_store_client.path = "./parameter_store_client"
+serde.workspace = true
+tokio = { workspace = true, features = ["macros"] }
+tracing.workspace = true
