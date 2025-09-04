@@ -1,5 +1,6 @@
 use onesec_forwarder_types::*;
 use std::collections::{HashMap, HashSet};
+use tracing::info;
 
 pub struct Runner<
     F: OneSecForwarderClient,
@@ -40,8 +41,15 @@ impl<
     }
 
     pub async fn run(mut self) -> Result<(), String> {
+        info!("Getting token contract addresses...");
+
         // Get the ERC20 token contract addresses per chain
         let token_contract_addresses = self.token_contract_addresses_reader.get().await?;
+
+        info!(
+            ?token_contract_addresses,
+            "Finished getting token contract addresses"
+        );
 
         // For each chain, get the list of addresses that have received any of the ERC20 tokens we
         // care about
@@ -57,6 +65,8 @@ impl<
 
         self.process_results(&per_chain_results).await?;
 
+        info!("Setting next block heights...");
+
         // Update the `next_block_height` value for each chain
         for (
             chain,
@@ -70,6 +80,8 @@ impl<
                 .await?;
         }
 
+        info!("Finished setting next block heights");
+
         Ok(())
     }
 
@@ -78,17 +90,27 @@ impl<
         chain: EvmChain,
         token_contract_addresses: Vec<TokenContractAddress>,
     ) -> Result<GetRecipientsForChainResult, String> {
-        let start_block_height = self.next_block_height_store.get(chain).await?;
-        let end_block_height = start_block_height + 4;
+        info!(?chain, "Getting next block height");
+
+        let next_block_height = self.next_block_height_store.get(chain).await?;
+
+        info!(
+            ?chain,
+            next_block_height, "Finished getting next block height"
+        );
+
+        let end_block_height = next_block_height + 4;
         let token_lookup: HashMap<_, _> = token_contract_addresses
             .iter()
             .map(|a| (a.address.clone(), a.token))
             .collect();
 
+        info!(?chain, "Getting recipient addresses...");
+
         self.eth_rpc_client
             .get_recipients(
                 chain,
-                start_block_height,
+                next_block_height,
                 end_block_height,
                 token_contract_addresses
                     .iter()
@@ -110,6 +132,13 @@ impl<
                     .collect(),
                 next_block_height: end_block_height + 1,
             })
+            .inspect(|r| {
+                info!(
+                    ?chain,
+                    recipients = r.recipients.len(),
+                    "Finished getting recipient addresses"
+                )
+            })
     }
 
     async fn process_results(
@@ -124,7 +153,7 @@ impl<
             return Ok(());
         }
 
-        let unique_recipient_addresses = per_chain_results
+        let unique_recipient_addresses: Vec<_> = per_chain_results
             .iter()
             .flat_map(|(_, r)| r.recipients.iter())
             .map(|r| r.recipient_address.clone())
@@ -132,12 +161,22 @@ impl<
             .into_iter()
             .collect();
 
+        info!(
+            unique_recipient_addresses = unique_recipient_addresses.len(),
+            "Getting forwarding addresses..."
+        );
+
         // Query the OneSecForwarder canister to filter out the addresses that are enabled for
         // forwarding
         let forwarding_addresses = self
             .onesec_forwarder_client
             .forwarding_addresses(unique_recipient_addresses)
             .await?;
+
+        info!(
+            forwarding_addresses = forwarding_addresses.len(),
+            "Finished getting forwarding addresses"
+        );
 
         if forwarding_addresses.is_empty() {
             return Ok(());

@@ -1,6 +1,7 @@
 use aws_config::BehaviorVersion;
 use ic_principal::Principal;
 use lambda_runtime::{Error, LambdaEvent, service_fn, tracing};
+use onesec_forwarder_constants::IC_API_GATEWAY_URL;
 use onesec_forwarder_lambda_canister_client::CanisterClient;
 use onesec_forwarder_lambda_core::Runner;
 use onesec_forwarder_lambda_evm_rpc_client::EthRpcClient;
@@ -17,8 +18,7 @@ struct Args {
 async fn main() -> Result<(), Error> {
     tracing::init_default_subscriber();
 
-    let func = service_fn(run_async);
-    lambda_runtime::run(func).await?;
+    lambda_runtime::run(service_fn(run_async)).await?;
     Ok(())
 }
 
@@ -30,8 +30,8 @@ async fn run_async(request: LambdaEvent<Args>) -> Result<(), Error> {
         return Err("ALCHEMY_API_KEY environment variable not set".into());
     };
 
-    let forwarder_client = CanisterClient::new(args.forwarder_canister_id);
-    let minter_client = CanisterClient::new(args.minter_canister_id);
+    let forwarder_client = CanisterClient::new(args.forwarder_canister_id, IC_API_GATEWAY_URL);
+    let minter_client = CanisterClient::new(args.minter_canister_id, IC_API_GATEWAY_URL);
     let block_heights_store = ParameterStoreClient::new(&aws_sdk_config);
     let eth_rpc_client = EthRpcClient::new(alchemy_api_key);
 

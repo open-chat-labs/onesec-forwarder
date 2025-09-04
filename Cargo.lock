@@ -2441,6 +2441,7 @@ dependencies = [
  "aws-config",
  "ic_principal",
  "lambda_runtime",
+ "onesec_forwarder_constants",
  "onesec_forwarder_lambda_canister_client",
  "onesec_forwarder_lambda_core",
  "onesec_forwarder_lambda_evm_rpc_client",
@@ -2469,6 +2470,7 @@ version = "0.1.0"
 dependencies = [
  "futures",
  "onesec_forwarder_types",
+ "tracing",
 ]
 
 [[package]]

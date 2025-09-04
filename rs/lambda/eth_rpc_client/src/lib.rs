@@ -19,7 +19,7 @@ impl EthRpcClient {
     fn url(&self, chain: EvmChain) -> String {
         let chain_name = match chain {
             EvmChain::Ethereum => "eth",
-            EvmChain::Arbitrum => "arbitrum",
+            EvmChain::Arbitrum => "arb",
             EvmChain::Base => "base",
         };
 
@@ -39,8 +39,8 @@ impl onesec_forwarder_lambda_core::EthRpcClient for EthRpcClient {
         contract_addresses: Vec<String>,
     ) -> Result<Vec<RecipientContractAddress>, String> {
         let params = GetLogsParams {
-            from_block: from_block.to_string(),
-            to_block: to_block.to_string(),
+            from_block: format_block_height(from_block),
+            to_block: format_block_height(to_block),
             address: contract_addresses,
             topics: Vec::new(),
         };
@@ -48,14 +48,13 @@ impl onesec_forwarder_lambda_core::EthRpcClient for EthRpcClient {
         let logs_response: EthRpcResponse<Vec<LogResponse>> = self
             .client
             .post(self.url(chain))
-            .header("content-type", "application/json")
-            .body(serde_json::to_vec(&EthRpcRequest::new("eth_getLogs", params)).unwrap())
+            .json(&EthRpcRequest::new("eth_getLogs", params))
             .send()
             .await
-            .map_err(|e| e.to_string())?
+            .map_err(|e| format!("Failed to send request to ETH RPC API: {e}"))?
             .json()
             .await
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| format!("Failed to process response from ETH RPC API: {e}"))?;
 
         Ok(logs_response
             .result
@@ -112,4 +111,8 @@ struct GetLogsParams {
 struct LogResponse {
     address: String,
     topics: Vec<String>,
+}
+
+fn format_block_height(block: u64) -> String {
+    format!("0x{block:x}")
 }

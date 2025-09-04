@@ -16,7 +16,10 @@ impl ParameterStoreClient {
     }
 
     fn parameter_name(&self, chain: EvmChain) -> String {
-        format!("next_block_height_{chain}")
+        format!(
+            "/onesec-forwarder/next-block-height/{}",
+            chain.to_string().to_lowercase()
+        )
     }
 }
 
@@ -28,7 +31,7 @@ impl NextBlockHeightStore for ParameterStoreClient {
             .name(self.parameter_name(chain))
             .send()
             .await
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| e.into_service_error().to_string())?;
 
         let value = get_parameter_response
             .parameter

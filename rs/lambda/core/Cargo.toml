@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 futures.workspace = true
 onesec_forwarder_types.path = "../../types"
+tracing.workspace = true

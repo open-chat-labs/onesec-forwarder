@@ -18,11 +18,37 @@ pub struct CanisterClient {
 }
 
 impl CanisterClient {
-    pub fn new(canister_id: Principal) -> Self {
+    pub fn new(canister_id: Principal, ic_url: &str) -> Self {
         CanisterClient {
-            agent: AgentBuilder::default().build().unwrap(),
+            agent: AgentBuilder::default().with_url(ic_url).build().unwrap(),
             canister_id,
         }
+    }
+
+    async fn query<A: CandidType, R: CandidType + DeserializeOwned>(
+        &self,
+        method_name: &str,
+        args: A,
+    ) -> Result<R, String> {
+        self.agent
+            .query(&self.canister_id, method_name)
+            .with_arg(encode_args(args))
+            .await
+            .map_err(|e| format!("Failed to query '{method_name}': {e}"))
+            .and_then(|r| decode_response(&r))
+    }
+
+    async fn update<A: CandidType, R: CandidType + DeserializeOwned>(
+        &self,
+        method_name: &str,
+        args: A,
+    ) -> Result<R, String> {
+        self.agent
+            .update(&self.canister_id, method_name)
+            .with_arg(encode_args(args))
+            .await
+            .map_err(|e| format!("Failed to call '{method_name}': {e}"))
+            .and_then(|r| decode_response(&r))
     }
 }
 
@@ -48,27 +74,16 @@ impl OneSecMinterClient for CanisterClient {
             receiver: icp_account,
         };
 
-        self.agent
-            .update(&self.canister_id, "forward_evm_to_icp")
-            .with_arg(encode_args(args))
-            .await
-            .map_err(|e| e.to_string())?;
-
-        Ok(())
+        self.update("forward_evm_to_icp", args).await
     }
 }
 
 impl TokenContractAddressesReader for CanisterClient {
     async fn get(&self) -> Result<HashMap<EvmChain, Vec<TokenContractAddress>>, String> {
-        let response: GetMetadataResponse = self
-            .agent
-            .query(&self.canister_id, "get_metadata")
-            .await
-            .map_err(|e| e.to_string())
-            .and_then(|r| decode_response::<GetMetadataResponse>(&r))?;
+        let response: Result<GetMetadataResponse, String> = self.query("get_metadata", ()).await?;
 
         let mut map: HashMap<EvmChain, Vec<TokenContractAddress>> = HashMap::new();
-        for token_metadata in response.tokens {
+        for token_metadata in response?.tokens {
             let Some(chain) = token_metadata.chain else {
                 continue;
             };
@@ -91,12 +106,8 @@ impl OneSecForwarderClient for CanisterClient {
     ) -> Result<HashMap<String, IcpAccount>, String> {
         let args = ForwardingAddressesArgs { evm_addresses };
 
-        self.agent
-            .query(&self.canister_id, "forwarding_addresses")
-            .with_arg(encode_args(args))
+        self.query::<_, ForwardingAddressesResult>("forwarding_addresses", args)
             .await
-            .map_err(|e| e.to_string())
-            .and_then(|r| decode_response::<ForwardingAddressesResult>(&r))
             .map(|r| r.forwarding_addresses)
     }
 }
