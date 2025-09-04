@@ -4,7 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+candid.workspace = true
 ic_principal.workspace = true
+ic-stable-structures.workspace = true
 onesec_forwarder_types.path = "../../types"
 onesec_forwarding_address.workspace = true
 serde.workspace = true
