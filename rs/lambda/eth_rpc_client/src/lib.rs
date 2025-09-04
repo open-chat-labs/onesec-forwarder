@@ -48,7 +48,7 @@ impl onesec_forwarder_lambda_core::EthRpcClient for EthRpcClient {
         let logs_response: EthRpcResponse<Vec<LogResponse>> = self
             .client
             .post(self.url(chain))
-            .json(&EthRpcRequest::new("eth_getLogs", params))
+            .json(&EthRpcRequest::new("eth_getLogs", vec![params]))
             .send()
             .await
             .map_err(|e| format!("Failed to send request to ETH RPC API: {e}"))?
@@ -101,7 +101,9 @@ struct EthRpcResponse<T> {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct GetLogsParams {
+    #[serde(rename = "fromBlock")]
     from_block: String,
+    #[serde(rename = "toBlock")]
     to_block: String,
     address: Vec<String>,
     topics: Vec<String>,

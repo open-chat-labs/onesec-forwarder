@@ -31,7 +31,7 @@ impl NextBlockHeightStore for ParameterStoreClient {
             .name(self.parameter_name(chain))
             .send()
             .await
-            .map_err(|e| e.into_service_error().to_string())?;
+            .map_err(|e| e.into_source().unwrap().to_string())?;
 
         let value = get_parameter_response
             .parameter
@@ -46,9 +46,10 @@ impl NextBlockHeightStore for ParameterStoreClient {
             .put_parameter()
             .name(self.parameter_name(chain))
             .value(value.to_string())
+            .overwrite(true)
             .send()
             .await
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| e.into_source().unwrap().to_string())?;
 
         Ok(())
     }
