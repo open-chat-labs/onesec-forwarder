@@ -1,0 +1,10 @@
+{
+  "dfx": "0.29.0",
+  "canisters": {
+    "onesec_forwarder_canister": {
+      "type": "rust",
+      "package": "onesec_forwarder_canister",
+      "candid": "./rs/canister/can.did"
+    }
+  }
+}

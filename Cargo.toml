@@ -22,7 +22,7 @@ futures = "0.3"
 ic-agent = "0.44"
 ic-cdk = "0.18"
 ic_principal = "0.1"
-ic-stable-structures = "0.7.0"
+ic-stable-structures = "0.7"
 lambda_runtime = "0.14"
 onesec_forwarding_address = { git = "https://github.com/sisyphe-dev/onesec-forwarding-address", rev = "10a4b5a263ea1d4d4b38bffdb45c4e274c7b7221", package = "forwarding-address" }
 openssl = "0.10"

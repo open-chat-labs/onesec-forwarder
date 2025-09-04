@@ -5,10 +5,8 @@ type ForwardingAddressesResult = record {
 };
 type IcpAccount = variant { ICRC : IcrcAccount; AccountId : text };
 type IcrcAccount = record { owner : principal; subaccount : opt blob };
-type InitArgs = record { whitelisted_callers : vec principal };
-type InitOrUpgradeArgs = variant { Upgrade : record {}; Init : InitArgs };
 type IsForwardingArgs = record { evm_address : text };
-service : (InitOrUpgradeArgs) -> {
+service : () -> {
   enable_forwarding : (EnableForwardingArgs) -> ();
   forwarding_addresses : (ForwardingAddressesArgs) -> (
       ForwardingAddressesResult,
