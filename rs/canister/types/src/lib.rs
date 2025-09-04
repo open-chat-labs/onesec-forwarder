@@ -20,6 +20,6 @@ pub struct ForwardingAddressesResult {
 }
 
 #[derive(CandidType, Serialize, Deserialize, Debug)]
-pub struct IsForwardingArgs {
+pub struct IsForwardingAddressArgs {
     pub evm_address: String,
 }

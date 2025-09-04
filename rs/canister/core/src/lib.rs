@@ -2,7 +2,7 @@ use crate::state::State;
 use onesec_forwarder_types::*;
 use std::cell::RefCell;
 
-pub use crate::state::DefaultTrackedAddresses;
+pub use crate::state::DefaultForwardingAddresses;
 
 mod state;
 
@@ -10,10 +10,10 @@ thread_local! {
     static STATE: RefCell<Option<State>> = RefCell::default();
 }
 
-pub fn init(tracked_addresses: DefaultTrackedAddresses) {
+pub fn init(forwarding_addresses: DefaultForwardingAddresses) {
     assert!(STATE.with_borrow(|s| s.is_none()));
 
-    STATE.set(Some(State::new(tracked_addresses)));
+    STATE.set(Some(State::new(forwarding_addresses)));
 }
 
 pub fn enable_forwarding(icp_account: IcpAccount) {
@@ -21,8 +21,8 @@ pub fn enable_forwarding(icp_account: IcpAccount) {
     with_state_mut(|s| s.enable_forwarding(evm_address, icp_account));
 }
 
-pub fn is_forwarding(evm_address: &str) -> Option<IcpAccount> {
-    with_state(|s| s.is_forwarding(evm_address))
+pub fn is_forwarding_address(evm_address: &str) -> Option<IcpAccount> {
+    with_state(|s| s.is_forwarding_address(evm_address))
 }
 
 fn calculate_forwarding_address(icp_account: &IcpAccount) -> String {

@@ -1,4 +1,4 @@
-use crate::state::tracked_addresses::TrackedAddresses;
+use crate::state::forwarding_addresses::ForwardingAddresses;
 use candid::CandidType;
 use ic_stable_structures::storable::Bound;
 use ic_stable_structures::{Memory, StableBTreeMap, Storable};
@@ -6,13 +6,13 @@ use onesec_forwarder_types::IcpAccount;
 use serde::Deserialize;
 use std::borrow::Cow;
 
-pub struct StableTrackedAddresses<M: Memory> {
+pub struct StableForwardingAddresses<M: Memory> {
     addresses: StableBTreeMap<String, StorableIcpAccount, M>,
 }
 
-impl<M: Memory> StableTrackedAddresses<M> {
+impl<M: Memory> StableForwardingAddresses<M> {
     pub fn init(memory: M) -> Self {
-        StableTrackedAddresses {
+        StableForwardingAddresses {
             addresses: StableBTreeMap::init(memory),
         }
     }
@@ -21,7 +21,7 @@ impl<M: Memory> StableTrackedAddresses<M> {
 #[derive(CandidType, Deserialize, Clone)]
 struct StorableIcpAccount(IcpAccount);
 
-impl<M: Memory> TrackedAddresses for StableTrackedAddresses<M> {
+impl<M: Memory> ForwardingAddresses for StableForwardingAddresses<M> {
     fn push(&mut self, icp_account: IcpAccount, evm_address: String) {
         self.addresses
             .insert(evm_address, StorableIcpAccount(icp_account));

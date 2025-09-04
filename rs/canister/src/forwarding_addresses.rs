@@ -6,7 +6,7 @@ fn forwarding_addresses(args: ForwardingAddressesArgs) -> ForwardingAddressesRes
     let forwarding_addresses = args
         .evm_addresses
         .into_iter()
-        .filter_map(|evm| crate::lib::is_forwarding(&evm).map(|icp| (evm, icp)))
+        .filter_map(|evm| crate::lib::is_forwarding_address(&evm).map(|icp| (evm, icp)))
         .collect();
 
     ForwardingAddressesResult {
