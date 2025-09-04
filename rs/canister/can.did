@@ -5,11 +5,11 @@ type ForwardingAddressesResult = record {
 };
 type IcpAccount = variant { ICRC : IcrcAccount; AccountId : text };
 type IcrcAccount = record { owner : principal; subaccount : opt blob };
-type IsForwardingArgs = record { evm_address : text };
+type IsForwardingAddressArgs = record { evm_address : text };
 service : () -> {
   enable_forwarding : (EnableForwardingArgs) -> ();
   forwarding_addresses : (ForwardingAddressesArgs) -> (
       ForwardingAddressesResult,
     ) query;
-  is_forwarding : (IsForwardingArgs) -> (bool) query;
+  is_forwarding_address : (IsForwardingAddressArgs) -> (bool) query;
 }
