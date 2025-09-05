@@ -57,7 +57,7 @@ fn encode_args<A: CandidType>(args: A) -> Vec<u8> {
 }
 
 fn decode_response<R: CandidType + DeserializeOwned>(bytes: &[u8]) -> Result<R, String> {
-    candid::decode_one(bytes).map_err(|e| e.to_string())
+    candid::decode_one(bytes).map_err(|e| format!("Failed to decode response: {e}"))
 }
 
 impl OneSecMinterClient for CanisterClient {
@@ -74,7 +74,8 @@ impl OneSecMinterClient for CanisterClient {
             receiver: icp_account,
         };
 
-        self.update("forward_evm_to_icp", args).await
+        let response: Result<Empty, String> = self.update("forward_evm_to_icp", args).await?;
+        response.map(|_| ())
     }
 }
 
@@ -135,3 +136,6 @@ mod onesec_minter_canister {
         pub chain: Option<EvmChain>,
     }
 }
+
+#[derive(CandidType, Deserialize)]
+struct Empty {}

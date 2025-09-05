@@ -191,6 +191,8 @@ impl<
                     .iter()
                     .filter(|r| r.recipient_address == evm_address)
                 {
+                    info!(?chain, ?evm_address, "Forwarding EVM to ICP...");
+
                     self.onesec_minter_client
                         .forward_evm_to_icp(
                             recipient.token,
@@ -201,6 +203,8 @@ impl<
                             icp_account.clone(),
                         )
                         .await?;
+
+                    info!(?chain, ?evm_address, "Forwarded EVM to ICP");
                 }
             }
         }
