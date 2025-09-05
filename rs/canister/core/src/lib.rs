@@ -16,9 +16,10 @@ pub fn init(forwarding_addresses: DefaultForwardingAddresses) {
     STATE.set(Some(State::new(forwarding_addresses)));
 }
 
-pub fn enable_forwarding(icp_account: IcpAccount) {
+pub fn enable_forwarding(icp_account: IcpAccount) -> String {
     let evm_address = calculate_forwarding_address(&icp_account);
-    with_state_mut(|s| s.enable_forwarding(evm_address, icp_account));
+    with_state_mut(|s| s.enable_forwarding(evm_address.clone(), icp_account));
+    evm_address
 }
 
 pub fn is_forwarding_address(evm_address: &str) -> Option<IcpAccount> {

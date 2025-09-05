@@ -11,7 +11,9 @@ pub struct State<T = DefaultForwardingAddresses> {
 
 impl<T: ForwardingAddresses> State<T> {
     pub fn new(forwarding_addresses: T) -> Self {
-        State { forwarding_addresses }
+        State {
+            forwarding_addresses,
+        }
     }
 
     pub fn enable_forwarding(&mut self, evm_address: String, icp_account: IcpAccount) {
