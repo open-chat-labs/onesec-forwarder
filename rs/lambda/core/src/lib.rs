@@ -102,7 +102,7 @@ impl<
         let end_block_height = next_block_height + 4;
         let token_lookup: HashMap<_, _> = token_contract_addresses
             .iter()
-            .map(|a| (a.address.clone(), a.token))
+            .map(|a| (a.address.to_lowercase(), a.token))
             .collect();
 
         info!(?chain, "Getting recipient addresses...");
@@ -123,7 +123,7 @@ impl<
                     .into_iter()
                     .filter_map(|r| {
                         token_lookup
-                            .get(&r.contract_address)
+                            .get(&r.contract_address.to_lowercase())
                             .map(|t| TokenRecipientAddress {
                                 token: *t,
                                 recipient_address: r.recipient_address,

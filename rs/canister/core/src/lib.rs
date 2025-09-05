@@ -39,6 +39,7 @@ fn calculate_forwarding_address(icp_account: &IcpAccount) -> String {
             id.as_bytes().to_vec(),
         ),
     }
+    .to_lowercase()
 }
 
 fn with_state<F: FnOnce(&State) -> T, T>(f: F) -> T {

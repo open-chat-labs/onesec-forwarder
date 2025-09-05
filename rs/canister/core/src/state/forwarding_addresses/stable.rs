@@ -24,11 +24,11 @@ struct StorableIcpAccount(IcpAccount);
 impl<M: Memory> ForwardingAddresses for StableForwardingAddresses<M> {
     fn push(&mut self, icp_account: IcpAccount, evm_address: String) {
         self.addresses
-            .insert(evm_address, StorableIcpAccount(icp_account));
+            .insert(evm_address.to_lowercase(), StorableIcpAccount(icp_account));
     }
 
     fn get(&self, evm_address: &str) -> Option<IcpAccount> {
-        self.addresses.get(&evm_address.to_string()).map(|v| v.0)
+        self.addresses.get(&evm_address.to_lowercase()).map(|v| v.0)
     }
 }
 
