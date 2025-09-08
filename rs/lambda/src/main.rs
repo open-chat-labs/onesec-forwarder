@@ -7,11 +7,13 @@ use onesec_forwarder_lambda_core::Runner;
 use onesec_forwarder_lambda_evm_rpc_client::EthRpcClient;
 use onesec_forwarder_lambda_parameter_store_client::ParameterStoreClient;
 use serde::Deserialize;
+use std::str::FromStr;
 
 #[derive(Deserialize)]
 struct Args {
     forwarder_canister_id: Option<Principal>,
     minter_canister_id: Option<Principal>,
+    max_blocks_per_request: Option<u32>,
 }
 
 #[tokio::main]
@@ -27,20 +29,25 @@ async fn run_async(request: LambdaEvent<Args>) -> Result<(), Error> {
 
     let forwarder_canister_id = match request.payload.forwarder_canister_id {
         Some(id) => id,
-        None => get_principal_from_env_var("FORWARDER_CANISTER_ID")?
+        None => get_principal_from_env_var("FORWARDER_CANISTER_ID")?,
     };
 
     let minter_canister_id = match request.payload.minter_canister_id {
         Some(id) => id,
-        None => get_principal_from_env_var("MINTER_CANISTER_ID")?
+        None => get_principal_from_env_var("MINTER_CANISTER_ID")?,
     };
 
     let alchemy_api_key = get_env_variable("ALCHEMY_API_KEY")?;
 
+    let max_blocks_per_request = match request.payload.max_blocks_per_request {
+        Some(blocks) => blocks,
+        None => u32::from_str(&get_env_variable("MAX_BLOCKS_PER_REQUEST")?)?,
+    };
+
     let forwarder_client = CanisterClient::new(forwarder_canister_id, IC_API_GATEWAY_URL);
     let minter_client = CanisterClient::new(minter_canister_id, IC_API_GATEWAY_URL);
     let block_heights_store = ParameterStoreClient::new(&aws_sdk_config);
-    let eth_rpc_client = EthRpcClient::new(alchemy_api_key);
+    let eth_rpc_client = EthRpcClient::new(alchemy_api_key, max_blocks_per_request);
 
     let runner = Runner::new(
         forwarder_client,
