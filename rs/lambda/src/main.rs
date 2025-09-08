@@ -10,8 +10,8 @@ use serde::Deserialize;
 
 #[derive(Deserialize)]
 struct Args {
-    forwarder_canister_id: Principal,
-    minter_canister_id: Principal,
+    forwarder_canister_id: Option<Principal>,
+    minter_canister_id: Option<Principal>,
 }
 
 #[tokio::main]
@@ -23,15 +23,22 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn run_async(request: LambdaEvent<Args>) -> Result<(), Error> {
-    let args = request.payload;
     let aws_sdk_config = aws_config::defaults(BehaviorVersion::latest()).load().await;
 
-    let Ok(alchemy_api_key) = std::env::var("ALCHEMY_API_KEY") else {
-        return Err("ALCHEMY_API_KEY environment variable not set".into());
+    let forwarder_canister_id = match request.payload.forwarder_canister_id {
+        Some(id) => id,
+        None => get_principal_from_env_var("FORWARDER_CANISTER_ID")?
     };
 
-    let forwarder_client = CanisterClient::new(args.forwarder_canister_id, IC_API_GATEWAY_URL);
-    let minter_client = CanisterClient::new(args.minter_canister_id, IC_API_GATEWAY_URL);
+    let minter_canister_id = match request.payload.minter_canister_id {
+        Some(id) => id,
+        None => get_principal_from_env_var("MINTER_CANISTER_ID")?
+    };
+
+    let alchemy_api_key = get_env_variable("ALCHEMY_API_KEY")?;
+
+    let forwarder_client = CanisterClient::new(forwarder_canister_id, IC_API_GATEWAY_URL);
+    let minter_client = CanisterClient::new(minter_canister_id, IC_API_GATEWAY_URL);
     let block_heights_store = ParameterStoreClient::new(&aws_sdk_config);
     let eth_rpc_client = EthRpcClient::new(alchemy_api_key);
 
@@ -45,4 +52,14 @@ async fn run_async(request: LambdaEvent<Args>) -> Result<(), Error> {
 
     runner.run().await?;
     Ok(())
+}
+
+fn get_principal_from_env_var(name: &str) -> Result<Principal, String> {
+    let env_var = get_env_variable(name)?;
+
+    Principal::from_text(env_var).map_err(|e| format!("{name} is not a valid principal: {e}"))
+}
+
+fn get_env_variable(name: &str) -> Result<String, String> {
+    std::env::var(name).map_err(|_| format!("{name} environment variable not set"))
 }
