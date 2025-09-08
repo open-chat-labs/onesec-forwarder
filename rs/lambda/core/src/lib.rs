@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use onesec_forwarder_types::*;
 use std::collections::{HashMap, HashSet};
 use tracing::info;
@@ -166,12 +167,22 @@ impl<
             "Getting forwarding addresses..."
         );
 
-        // Query the OneSecForwarder canister to filter out the addresses that are enabled for
-        // forwarding
-        let forwarding_addresses = self
-            .onesec_forwarder_client
-            .forwarding_addresses(unique_recipient_addresses)
-            .await?;
+        // Query the OneSecForwarder canister in batches of 10k to filter out only the addresses
+        // that are enabled for forwarding
+        let forwarding_addresses: Vec<_> = futures::future::try_join_all(
+            unique_recipient_addresses
+                .into_iter()
+                .chunks(10000)
+                .into_iter()
+                .map(|batch| {
+                    self.onesec_forwarder_client
+                        .forwarding_addresses(batch.collect())
+                }),
+        )
+        .await?
+        .into_iter()
+        .flatten()
+        .collect();
 
         info!(
             forwarding_addresses = forwarding_addresses.len(),

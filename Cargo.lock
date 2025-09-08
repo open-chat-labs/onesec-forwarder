@@ -592,7 +592,7 @@ dependencies = [
  "bitflags",
  "cexpr",
  "clang-sys",
- "itertools",
+ "itertools 0.12.1",
  "lazy_static",
  "lazycell",
  "log",
@@ -1198,13 +1198,12 @@ dependencies = [
 [[package]]
 name = "forwarding-address"
 version = "0.1.0"
-source = "git+https://github.com/sisyphe-dev/onesec-forwarding-address?rev=10a4b5a263ea1d4d4b38bffdb45c4e274c7b7221#10a4b5a263ea1d4d4b38bffdb45c4e274c7b7221"
+source = "git+https://github.com/sisyphe-dev/onesec-forwarding-address?rev=1529b1efb2fe3e5ca0e13af3f3bf9e41532ae4a4#1529b1efb2fe3e5ca0e13af3f3bf9e41532ae4a4"
 dependencies = [
  "getrandom 0.2.16",
  "ic-ethereum-types",
  "ic-secp256k1",
  "ic-sha3 1.0.0 (git+https://github.com/dfinity/ic.git?rev=5128134d24b7a5b8e24a3d5d40c4cce9d81fd375)",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -2095,6 +2094,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "itertools"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
+dependencies = [
+ "either",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2481,6 +2489,7 @@ name = "onesec_forwarder_lambda_core"
 version = "0.1.0"
 dependencies = [
  "futures",
+ "itertools 0.14.0",
  "onesec_forwarder_types",
  "tracing",
 ]
