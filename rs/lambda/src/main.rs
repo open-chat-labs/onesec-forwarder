@@ -1,3 +1,4 @@
+use crate::config::build_config;
 use aws_config::BehaviorVersion;
 use ic_principal::Principal;
 use lambda_runtime::{Error, LambdaEvent, service_fn, tracing};
@@ -6,14 +7,28 @@ use onesec_forwarder_lambda_canister_client::CanisterClient;
 use onesec_forwarder_lambda_core::Runner;
 use onesec_forwarder_lambda_evm_rpc_client::EthRpcClient;
 use onesec_forwarder_lambda_parameter_store_client::ParameterStoreClient;
+use onesec_forwarder_types::EvmChain;
 use serde::Deserialize;
-use std::str::FromStr;
+
+mod config;
 
 #[derive(Deserialize)]
 struct Args {
     forwarder_canister_id: Option<Principal>,
     minter_canister_id: Option<Principal>,
-    max_blocks_per_request: Option<u32>,
+    alchemy_api_key: Option<String>,
+    max_blocks_per_request_ethereum: Option<u32>,
+    max_blocks_per_request_arbitrum: Option<u32>,
+    max_blocks_per_request_base: Option<u32>,
+}
+
+struct Config {
+    forwarder_canister_id: Principal,
+    minter_canister_id: Principal,
+    alchemy_api_key: String,
+    max_blocks_per_request_ethereum: u32,
+    max_blocks_per_request_arbitrum: u32,
+    max_blocks_per_request_base: u32,
 }
 
 #[tokio::main]
@@ -27,27 +42,20 @@ async fn main() -> Result<(), Error> {
 async fn run_async(request: LambdaEvent<Args>) -> Result<(), Error> {
     let aws_sdk_config = aws_config::defaults(BehaviorVersion::latest()).load().await;
 
-    let forwarder_canister_id = match request.payload.forwarder_canister_id {
-        Some(id) => id,
-        None => get_principal_from_env_var("FORWARDER_CANISTER_ID")?,
-    };
+    let config = build_config(request.payload)?;
 
-    let minter_canister_id = match request.payload.minter_canister_id {
-        Some(id) => id,
-        None => get_principal_from_env_var("MINTER_CANISTER_ID")?,
-    };
+    let max_blocks_per_request_map = [
+        (EvmChain::Ethereum, config.max_blocks_per_request_ethereum),
+        (EvmChain::Arbitrum, config.max_blocks_per_request_arbitrum),
+        (EvmChain::Base, config.max_blocks_per_request_base),
+    ]
+    .into_iter()
+    .collect();
 
-    let alchemy_api_key = get_env_variable("ALCHEMY_API_KEY")?;
-
-    let max_blocks_per_request = match request.payload.max_blocks_per_request {
-        Some(blocks) => blocks,
-        None => u32::from_str(&get_env_variable("MAX_BLOCKS_PER_REQUEST")?)?,
-    };
-
-    let forwarder_client = CanisterClient::new(forwarder_canister_id, IC_API_GATEWAY_URL);
-    let minter_client = CanisterClient::new(minter_canister_id, IC_API_GATEWAY_URL);
+    let forwarder_client = CanisterClient::new(config.forwarder_canister_id, IC_API_GATEWAY_URL);
+    let minter_client = CanisterClient::new(config.minter_canister_id, IC_API_GATEWAY_URL);
     let block_heights_store = ParameterStoreClient::new(&aws_sdk_config);
-    let eth_rpc_client = EthRpcClient::new(alchemy_api_key, max_blocks_per_request);
+    let eth_rpc_client = EthRpcClient::new(config.alchemy_api_key, max_blocks_per_request_map);
 
     let runner = Runner::new(
         forwarder_client,
@@ -59,14 +67,4 @@ async fn run_async(request: LambdaEvent<Args>) -> Result<(), Error> {
 
     runner.run().await?;
     Ok(())
-}
-
-fn get_principal_from_env_var(name: &str) -> Result<Principal, String> {
-    let env_var = get_env_variable(name)?;
-
-    Principal::from_text(env_var).map_err(|e| format!("{name} is not a valid principal: {e}"))
-}
-
-fn get_env_variable(name: &str) -> Result<String, String> {
-    std::env::var(name).map_err(|_| format!("{name} environment variable not set"))
 }

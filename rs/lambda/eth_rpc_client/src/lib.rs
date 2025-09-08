@@ -2,15 +2,16 @@ use onesec_forwarder_lambda_core::{GetRecipientsResult, RecipientContractAddress
 use onesec_forwarder_types::EvmChain;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 pub struct EthRpcClient {
     client: Client,
     api_key: String,
-    max_blocks_per_request: u32,
+    max_blocks_per_request: HashMap<EvmChain, u32>,
 }
 
 impl EthRpcClient {
-    pub fn new(api_key: String, max_blocks_per_request: u32) -> Self {
+    pub fn new(api_key: String, max_blocks_per_request: HashMap<EvmChain, u32>) -> Self {
         EthRpcClient {
             client: Client::new(),
             api_key,
@@ -39,7 +40,8 @@ impl onesec_forwarder_lambda_core::EthRpcClient for EthRpcClient {
         from_block: u64,
         contract_addresses: Vec<String>,
     ) -> Result<GetRecipientsResult, String> {
-        let to_block = from_block - 1 + self.max_blocks_per_request as u64;
+        let to_block =
+            from_block - 1 + self.max_blocks_per_request.get(&chain).copied().unwrap() as u64;
 
         let params = GetLogsParams {
             from_block: format_block_height(from_block),

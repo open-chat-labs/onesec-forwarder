@@ -2466,6 +2466,7 @@ dependencies = [
  "onesec_forwarder_lambda_core",
  "onesec_forwarder_lambda_evm_rpc_client",
  "onesec_forwarder_lambda_parameter_store_client",
+ "onesec_forwarder_types",
  "openssl",
  "serde",
  "tokio",
