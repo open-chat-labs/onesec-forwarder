@@ -100,7 +100,7 @@ impl<
             next_block_height, "Finished getting next block height"
         );
 
-        let end_block_height = next_block_height + 4;
+        let end_block_height = next_block_height + 9;
         let token_lookup: HashMap<_, _> = token_contract_addresses
             .iter()
             .map(|a| (a.address.to_lowercase(), a.token))
