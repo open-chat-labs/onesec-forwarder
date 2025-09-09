@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use onesec_forwarder_types::*;
 use std::collections::{HashMap, HashSet};
-use tracing::info;
+use tracing::{error, info};
 
 pub struct Runner<
     F: OneSecForwarderClient,
@@ -9,12 +9,14 @@ pub struct Runner<
     T: TokenContractAddressesReader,
     B: NextBlockHeightStore,
     E: EthRpcClient,
+    L: ForwardingEventLogger,
 > {
     onesec_forwarder_client: F,
     onesec_minter_client: M,
     token_contract_addresses_reader: T,
     next_block_height_store: B,
     eth_rpc_client: E,
+    forwarding_event_logger: L,
 }
 
 impl<
@@ -23,7 +25,8 @@ impl<
     T: TokenContractAddressesReader,
     B: NextBlockHeightStore,
     E: EthRpcClient,
-> Runner<F, M, T, B, E>
+    L: ForwardingEventLogger,
+> Runner<F, M, T, B, E, L>
 {
     pub fn new(
         onesec_forwarder_client: F,
@@ -31,6 +34,7 @@ impl<
         token_contract_addresses_reader: T,
         next_block_height_store: B,
         eth_rpc_client: E,
+        forwarding_event_logger: L,
     ) -> Self {
         Runner {
             onesec_forwarder_client,
@@ -38,6 +42,7 @@ impl<
             token_contract_addresses_reader,
             next_block_height_store,
             eth_rpc_client,
+            forwarding_event_logger,
         }
     }
 
@@ -213,27 +218,34 @@ impl<
 
         // For each forwarding address, find the relevent deposits and notify the OneSecMinter
         // canister of each one
-        for (evm_address, icp_account) in forwarding_addresses {
+        for (address, icp_account) in forwarding_addresses {
             for (chain, GetRecipientsForChainResult { recipients, .. }) in per_chain_results.iter()
             {
-                for recipient in recipients
-                    .iter()
-                    .filter(|r| r.recipient_address == evm_address)
-                {
-                    info!(?chain, ?evm_address, "Forwarding EVM to ICP...");
+                for recipient in recipients.iter().filter(|r| r.recipient_address == address) {
+                    let evm_address = EvmAddress {
+                        chain: *chain,
+                        address: address.clone(),
+                    };
+
+                    info!(?evm_address, "Forwarding EVM to ICP...");
 
                     self.onesec_minter_client
                         .forward_evm_to_icp(
                             recipient.token,
-                            EvmAddress {
-                                chain: *chain,
-                                address: evm_address.clone(),
-                            },
+                            evm_address.clone(),
                             icp_account.clone(),
                         )
                         .await?;
 
-                    info!(?chain, ?evm_address, "Forwarded EVM to ICP");
+                    if let Err(error) = self
+                        .forwarding_event_logger
+                        .log(recipient.token, evm_address.clone(), icp_account.clone())
+                        .await
+                    {
+                        error!(?error, "Failed to write forwarding event to log");
+                    }
+
+                    info!(?evm_address, "Forwarded EVM to ICP");
                 }
             }
         }
@@ -278,6 +290,23 @@ pub trait EthRpcClient {
         from_block: u64,
         contract_addresses: Vec<String>,
     ) -> impl Future<Output = Result<GetRecipientsResult, String>>;
+}
+
+pub trait ForwardingEventLogger {
+    fn log(
+        &self,
+        token: Token,
+        evm_address: EvmAddress,
+        icp_account: IcpAccount,
+    ) -> impl Future<Output = Result<(), String>>;
+}
+
+pub struct NullLogger;
+
+impl ForwardingEventLogger for NullLogger {
+    async fn log(&self, _: Token, _: EvmAddress, _: IcpAccount) -> Result<(), String> {
+        Ok(())
+    }
 }
 
 pub struct GetRecipientsResult {

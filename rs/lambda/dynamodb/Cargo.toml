@@ -1,0 +1,10 @@
+[package]
+name = "onesec_forwarder_lambda_dynamodb"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+aws-sdk-dynamodb.workspace = true
+aws-types.workspace = true
+onesec_forwarder_lambda_core.path = "../core"
+onesec_forwarder_types.path = "../../types"

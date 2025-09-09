@@ -46,12 +46,38 @@ pub struct TokenContractAddress {
     pub address: String,
 }
 
+impl Token {
+    pub fn name(&self) -> &'static str {
+        match self {
+            Token::BOB => "BOB",
+            Token::ICP => "ICP",
+            Token::GLDT => "GLDT",
+            Token::USDC => "USDC",
+            Token::USDT => "USDT",
+            Token::cbBTC => "cbBTC",
+            Token::ckBTC => "ckBTC",
+        }
+    }
+}
+
+impl Display for Token {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        f.write_str(self.name())
+    }
+}
+
+impl EvmChain {
+    pub fn name(&self) -> &'static str {
+        match self {
+            EvmChain::Ethereum => "Ethereum",
+            EvmChain::Arbitrum => "Arbitrum",
+            EvmChain::Base => "Base",
+        }
+    }
+}
+
 impl Display for EvmChain {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        match self {
-            EvmChain::Ethereum => f.write_str("Ethereum"),
-            EvmChain::Arbitrum => f.write_str("Arbitrum"),
-            EvmChain::Base => f.write_str("Base"),
-        }
+        f.write_str(self.name())
     }
 }

@@ -5,6 +5,7 @@ use lambda_runtime::{Error, LambdaEvent, service_fn, tracing};
 use onesec_forwarder_constants::IC_API_GATEWAY_URL;
 use onesec_forwarder_lambda_canister_client::CanisterClient;
 use onesec_forwarder_lambda_core::Runner;
+use onesec_forwarder_lambda_dynamodb::DynamoDbLogger;
 use onesec_forwarder_lambda_evm_rpc_client::EthRpcClient;
 use onesec_forwarder_lambda_parameter_store_client::ParameterStoreClient;
 use onesec_forwarder_types::EvmChain;
@@ -56,6 +57,7 @@ async fn run_async(request: LambdaEvent<Args>) -> Result<(), Error> {
     let minter_client = CanisterClient::new(config.minter_canister_id, IC_API_GATEWAY_URL);
     let block_heights_store = ParameterStoreClient::new(&aws_sdk_config);
     let eth_rpc_client = EthRpcClient::new(config.alchemy_api_key, max_blocks_per_request_map);
+    let dynamodb_logger = DynamoDbLogger::new(&aws_sdk_config, "onesec_forwarding_events");
 
     let runner = Runner::new(
         forwarder_client,
@@ -63,6 +65,7 @@ async fn run_async(request: LambdaEvent<Args>) -> Result<(), Error> {
         minter_client,
         block_heights_store,
         eth_rpc_client,
+        dynamodb_logger,
     );
 
     runner.run().await?;

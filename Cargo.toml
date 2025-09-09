@@ -7,6 +7,7 @@ members = [
     "rs/lambda",
     "rs/lambda/canister_client",
     "rs/lambda/core",
+    "rs/lambda/dynamodb",
     "rs/lambda/eth_rpc_client",
     "rs/lambda/parameter_store_client",
     "rs/types"
@@ -15,6 +16,7 @@ resolver = "3"
 
 [workspace.dependencies]
 aws-config = "1"
+aws-sdk-dynamodb = "1.92.0"
 aws-sdk-ssm = "1"
 aws-types = "1"
 candid = "0.10"

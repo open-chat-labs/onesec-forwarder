@@ -10,6 +10,7 @@ lambda_runtime.workspace = true
 onesec_forwarder_constants.path = "../constants"
 onesec_forwarder_lambda_canister_client.path = "./canister_client"
 onesec_forwarder_lambda_core.path = "./core"
+onesec_forwarder_lambda_dynamodb.path = "./dynamodb"
 onesec_forwarder_lambda_evm_rpc_client.path = "./eth_rpc_client"
 onesec_forwarder_lambda_parameter_store_client.path = "./parameter_store_client"
 onesec_forwarder_types.path = "../types"
