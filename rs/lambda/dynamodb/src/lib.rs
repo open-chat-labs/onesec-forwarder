@@ -25,6 +25,7 @@ impl ForwardingEventLogger for DynamoDbLogger {
         token: Token,
         evm_address: EvmAddress,
         icp_account: IcpAccount,
+        now_millis: u64,
     ) -> Result<(), String> {
         let mut fields = HashMap::new();
         fields.insert("token".to_string(), AttributeValue::S(token.to_string()));
@@ -36,6 +37,7 @@ impl ForwardingEventLogger for DynamoDbLogger {
             "evm_address".to_string(),
             AttributeValue::S(evm_address.address),
         );
+        fields.insert("timestamp".to_string(), AttributeValue::N(now_millis.to_string()));
 
         match icp_account {
             IcpAccount::ICRC(icrc) => {

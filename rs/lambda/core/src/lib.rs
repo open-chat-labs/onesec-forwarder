@@ -1,6 +1,7 @@
 use itertools::Itertools;
 use onesec_forwarder_types::*;
 use std::collections::{HashMap, HashSet};
+use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::{error, info};
 
 pub struct Runner<
@@ -239,7 +240,7 @@ impl<
 
                     if let Err(error) = self
                         .forwarding_event_logger
-                        .log(recipient.token, evm_address.clone(), icp_account.clone())
+                        .log(recipient.token, evm_address.clone(), icp_account.clone(), get_timestamp_millis())
                         .await
                     {
                         error!(?error, "Failed to write forwarding event to log");
@@ -252,6 +253,10 @@ impl<
 
         Ok(())
     }
+}
+
+fn get_timestamp_millis() -> u64 {
+    SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as u64
 }
 
 pub trait OneSecForwarderClient {
@@ -298,13 +303,14 @@ pub trait ForwardingEventLogger {
         token: Token,
         evm_address: EvmAddress,
         icp_account: IcpAccount,
+        now_millis: u64,
     ) -> impl Future<Output = Result<(), String>>;
 }
 
 pub struct NullLogger;
 
 impl ForwardingEventLogger for NullLogger {
-    async fn log(&self, _: Token, _: EvmAddress, _: IcpAccount) -> Result<(), String> {
+    async fn log(&self, _: Token, _: EvmAddress, _: IcpAccount, _: u64) -> Result<(), String> {
         Ok(())
     }
 }
