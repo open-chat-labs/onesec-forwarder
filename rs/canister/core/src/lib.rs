@@ -26,6 +26,10 @@ pub fn is_forwarding_address(evm_address: &str) -> Option<IcpAccount> {
     with_state(|s| s.is_forwarding_address(evm_address))
 }
 
+pub fn forwarding_addresses_len() -> u64 {
+    with_state(|s| s.forwarding_addresses_len())
+}
+
 fn calculate_forwarding_address(icp_account: &IcpAccount) -> String {
     let key = onesec_forwarding_address::MAINNET_KEY_ID;
     match icp_account {

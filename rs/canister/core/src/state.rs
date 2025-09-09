@@ -23,4 +23,8 @@ impl<T: ForwardingAddresses> State<T> {
     pub fn is_forwarding_address(&self, evm_address: &str) -> Option<IcpAccount> {
         self.forwarding_addresses.get(evm_address)
     }
+
+    pub fn forwarding_addresses_len(&self) -> u64 {
+        self.forwarding_addresses.len()
+    }
 }

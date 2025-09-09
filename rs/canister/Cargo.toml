@@ -9,6 +9,8 @@ crate-type = ["cdylib"]
 [dependencies]
 candid.workspace = true
 ic-cdk.workspace = true
+ic-http-types.workspace = true
+ic-metrics-encoder.workspace = true
 ic-stable-structures.workspace = true
 onesec_forwarder_canister_core.path = "./core"
 onesec_forwarder_canister_types.path = "./types"

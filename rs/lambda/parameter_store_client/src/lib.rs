@@ -42,7 +42,7 @@ impl NextBlockHeightStore for ParameterStoreClient {
                     .map(|v| u64::from_str(&v).map_err(|e| e.to_string()))
                     .transpose()
             }
-            Err(error) if matches!(error, GetParameterError::ParameterNotFound(_)) => Ok(None),
+            Err(GetParameterError::ParameterNotFound(_)) => Ok(None),
             Err(error) => Err(error.to_string()),
         }
     }

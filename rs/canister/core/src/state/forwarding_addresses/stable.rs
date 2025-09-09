@@ -30,6 +30,10 @@ impl<M: Memory> ForwardingAddresses for StableForwardingAddresses<M> {
     fn get(&self, evm_address: &str) -> Option<IcpAccount> {
         self.addresses.get(&evm_address.to_lowercase()).map(|v| v.0)
     }
+
+    fn len(&self) -> u64 {
+        self.addresses.len()
+    }
 }
 
 impl Storable for StorableIcpAccount {

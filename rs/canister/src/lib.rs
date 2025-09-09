@@ -6,5 +6,7 @@ mod forwarding_addresses;
 mod is_forwarding_address;
 mod lifecycle;
 mod memory;
+mod http;
+mod metrics;
 
 ic_cdk::export_candid!();

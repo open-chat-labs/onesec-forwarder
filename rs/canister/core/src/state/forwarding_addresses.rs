@@ -8,6 +8,7 @@ mod stable;
 pub trait ForwardingAddresses {
     fn push(&mut self, icp_account: IcpAccount, evm_address: String);
     fn get(&self, evm_address: &str) -> Option<IcpAccount>;
+    fn len(&self) -> u64;
 }
 
 pub type DefaultForwardingAddresses = StableForwardingAddresses<VirtualMemory<DefaultMemoryImpl>>;
