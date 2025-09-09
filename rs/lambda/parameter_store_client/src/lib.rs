@@ -1,10 +1,10 @@
 use aws_sdk_ssm::Client;
+use aws_sdk_ssm::operation::get_parameter::GetParameterError;
+use aws_sdk_ssm::types::ParameterType;
 use aws_types::SdkConfig;
 use onesec_forwarder_lambda_core::NextBlockHeightStore;
 use onesec_forwarder_types::EvmChain;
 use std::str::FromStr;
-use aws_sdk_ssm::operation::get_parameter::GetParameterError;
-use aws_sdk_ssm::types::ParameterType;
 
 pub struct ParameterStoreClient {
     aws_client: aws_sdk_ssm::Client,
@@ -36,12 +36,11 @@ impl NextBlockHeightStore for ParameterStoreClient {
             .map_err(|e| e.into_service_error());
 
         match get_parameter_response {
-            Ok(result) => {
-                result.parameter
-                    .and_then(|p| p.value)
-                    .map(|v| u64::from_str(&v).map_err(|e| e.to_string()))
-                    .transpose()
-            }
+            Ok(result) => result
+                .parameter
+                .and_then(|p| p.value)
+                .map(|v| u64::from_str(&v).map_err(|e| e.to_string()))
+                .transpose(),
             Err(GetParameterError::ParameterNotFound(_)) => Ok(None),
             Err(error) => Err(error.to_string()),
         }
