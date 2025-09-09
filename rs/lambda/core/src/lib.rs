@@ -100,48 +100,64 @@ impl<
             next_block_height, "Finished getting next block height"
         );
 
-        let token_lookup: HashMap<_, _> = token_contract_addresses
-            .iter()
-            .map(|a| (a.address.to_lowercase(), a.token))
-            .collect();
+        if let Some(next_block) = next_block_height {
+            let token_lookup: HashMap<_, _> = token_contract_addresses
+                .iter()
+                .map(|a| (a.address.to_lowercase(), a.token))
+                .collect();
 
-        info!(?chain, "Getting recipient addresses...");
+            info!(?chain, "Getting recipient addresses...");
 
-        let eth_rpc_result = self
-            .eth_rpc_client
-            .get_recipients(
-                chain,
-                next_block_height,
-                token_contract_addresses
-                    .iter()
-                    .map(|a| a.address.clone())
+            let eth_rpc_result = self
+                .eth_rpc_client
+                .get_recipients(
+                    chain,
+                    next_block,
+                    token_contract_addresses
+                        .iter()
+                        .map(|a| a.address.clone())
+                        .collect(),
+                )
+                .await?;
+
+            let result = GetRecipientsForChainResult {
+                recipients: eth_rpc_result
+                    .recipients
+                    .into_iter()
+                    .filter_map(|r| {
+                        token_lookup
+                            .get(&r.contract_address.to_lowercase())
+                            .map(|t| TokenRecipientAddress {
+                                token: *t,
+                                recipient_address: r.recipient_address,
+                            })
+                    })
                     .collect(),
-            )
-            .await?;
+                next_block_height: eth_rpc_result.next_block_height,
+            };
 
-        let result = GetRecipientsForChainResult {
-            recipients: eth_rpc_result
-                .recipients
-                .into_iter()
-                .filter_map(|r| {
-                    token_lookup
-                        .get(&r.contract_address.to_lowercase())
-                        .map(|t| TokenRecipientAddress {
-                            token: *t,
-                            recipient_address: r.recipient_address,
-                        })
-                })
-                .collect(),
-            next_block_height: eth_rpc_result.next_block_height,
-        };
+            info!(
+                ?chain,
+                recipients = result.recipients.len(),
+                "Finished getting recipient addresses"
+            );
 
-        info!(
-            ?chain,
-            recipients = result.recipients.len(),
-            "Finished getting recipient addresses"
-        );
+            Ok(result)
+        } else {
+            info!(?chain, "Getting latest block height...");
 
-        Ok(result)
+            let latest_block_height = self.eth_rpc_client.latest_block(chain).await?;
+
+            info!(
+                ?chain,
+                latest_block_height, "Finished getting latest block height"
+            );
+
+            Ok(GetRecipientsForChainResult {
+                recipients: Vec::new(),
+                next_block_height: latest_block_height + 1,
+            })
+        }
     }
 
     async fn process_results(
@@ -249,11 +265,13 @@ pub trait TokenContractAddressesReader {
 }
 
 pub trait NextBlockHeightStore {
-    fn get(&self, chain: EvmChain) -> impl Future<Output = Result<u64, String>>;
+    fn get(&self, chain: EvmChain) -> impl Future<Output = Result<Option<u64>, String>>;
     fn set(&mut self, chain: EvmChain, height: u64) -> impl Future<Output = Result<(), String>>;
 }
 
 pub trait EthRpcClient {
+    fn latest_block(&self, chain: EvmChain) -> impl Future<Output = Result<u64, String>>;
+
     fn get_recipients(
         &self,
         chain: EvmChain,
