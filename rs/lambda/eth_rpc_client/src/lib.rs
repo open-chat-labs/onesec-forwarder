@@ -1,3 +1,4 @@
+use std::cmp::max;
 use onesec_forwarder_lambda_core::{GetRecipientsResult, RecipientContractAddress};
 use onesec_forwarder_types::EvmChain;
 use reqwest::Client;
@@ -61,24 +62,25 @@ impl onesec_forwarder_lambda_core::EthRpcClient for EthRpcClient {
             .await
             .map_err(|e| format!("Failed to process response from ETH RPC API: {e}"))?;
 
-        let recipients = logs_response
-            .result
-            .into_iter()
-            .filter_map(|mut l| {
-                if l.topics.len() == 3 {
-                    Some(RecipientContractAddress {
-                        recipient_address: format!("0x{}", &l.topics.pop().unwrap()[26..]),
-                        contract_address: l.address,
-                    })
-                } else {
-                    None
-                }
-            })
-            .collect();
+        let mut recipients = Vec::new();
+        let mut max_block = 0;
+
+        for log in logs_response.result {
+            if log.topics.len() == 3 {
+                recipients.push(RecipientContractAddress {
+                    recipient_address: format!("0x{}", &log.topics.last().unwrap()[26..]),
+                    contract_address: log.address,
+                });
+            }
+            let block = u64::from_str_radix(log.block_number.strip_prefix("0x").unwrap(), 16).unwrap();
+            if block > max_block {
+                max_block = block;
+            }
+        }
 
         Ok(GetRecipientsResult {
             recipients,
-            next_block_height: to_block + 1,
+            next_block_height: max(from_block, max_block + 1),
         })
     }
 }
@@ -123,6 +125,8 @@ struct GetLogsParams {
 struct LogResponse {
     address: String,
     topics: Vec<String>,
+    #[serde(rename = "blockNumber")]
+    block_number: String,
 }
 
 fn format_block_height(block: u64) -> String {
