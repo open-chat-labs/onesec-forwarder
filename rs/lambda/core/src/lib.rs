@@ -2,7 +2,7 @@ use itertools::Itertools;
 use onesec_forwarder_types::*;
 use std::collections::{HashMap, HashSet};
 use std::time::{SystemTime, UNIX_EPOCH};
-use tracing::{error, info};
+use tracing::{error, trace};
 
 pub struct Runner<
     F: OneSecForwarderClient,
@@ -48,12 +48,12 @@ impl<
     }
 
     pub async fn run(mut self) -> Result<(), String> {
-        info!("Getting token contract addresses...");
+        trace!("Getting token contract addresses...");
 
         // Get the ERC20 token contract addresses per chain
         let token_contract_addresses = self.token_contract_addresses_reader.get().await?;
 
-        info!(
+        trace!(
             ?token_contract_addresses,
             "Finished getting token contract addresses"
         );
@@ -72,7 +72,7 @@ impl<
 
         self.process_results(&per_chain_results).await?;
 
-        info!("Setting next block heights...");
+        trace!("Setting next block heights...");
 
         // Update the `next_block_height` value for each chain
         for (
@@ -87,7 +87,7 @@ impl<
                 .await?;
         }
 
-        info!("Finished setting next block heights");
+        trace!("Finished setting next block heights");
 
         Ok(())
     }
@@ -97,11 +97,11 @@ impl<
         chain: EvmChain,
         token_contract_addresses: Vec<TokenContractAddress>,
     ) -> Result<GetRecipientsForChainResult, String> {
-        info!(?chain, "Getting next block height");
+        trace!(?chain, "Getting next block height");
 
         let next_block_height = self.next_block_height_store.get(chain).await?;
 
-        info!(
+        trace!(
             ?chain,
             next_block_height, "Finished getting next block height"
         );
@@ -112,7 +112,7 @@ impl<
                 .map(|a| (a.address.to_lowercase(), a.token))
                 .collect();
 
-            info!(?chain, "Getting recipient addresses...");
+            trace!(?chain, "Getting recipient addresses...");
 
             let eth_rpc_result = self
                 .eth_rpc_client
@@ -142,7 +142,7 @@ impl<
                 next_block_height: eth_rpc_result.next_block_height,
             };
 
-            info!(
+            trace!(
                 ?chain,
                 recipients = result.recipients.len(),
                 "Finished getting recipient addresses"
@@ -150,11 +150,11 @@ impl<
 
             Ok(result)
         } else {
-            info!(?chain, "Getting latest block height...");
+            trace!(?chain, "Getting latest block height...");
 
             let latest_block_height = self.eth_rpc_client.latest_block(chain).await?;
 
-            info!(
+            trace!(
                 ?chain,
                 latest_block_height, "Finished getting latest block height"
             );
@@ -186,7 +186,7 @@ impl<
             .into_iter()
             .collect();
 
-        info!(
+        trace!(
             unique_recipient_addresses = unique_recipient_addresses.len(),
             "Getting forwarding addresses..."
         );
@@ -208,7 +208,7 @@ impl<
         .flatten()
         .collect();
 
-        info!(
+        trace!(
             forwarding_addresses = forwarding_addresses.len(),
             "Finished getting forwarding addresses"
         );
@@ -228,7 +228,7 @@ impl<
                         address: address.clone(),
                     };
 
-                    info!(?evm_address, "Forwarding EVM to ICP...");
+                    trace!(?evm_address, "Forwarding EVM to ICP...");
 
                     self.onesec_minter_client
                         .forward_evm_to_icp(
@@ -246,7 +246,7 @@ impl<
                         error!(?error, "Failed to write forwarding event to log");
                     }
 
-                    info!(?evm_address, "Forwarded EVM to ICP");
+                    trace!(?evm_address, "Forwarded EVM to ICP");
                 }
             }
         }
