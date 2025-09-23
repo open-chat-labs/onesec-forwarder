@@ -1,0 +1,1 @@
+cargo lambda build -p onesec_forwarder_lambda --release --output-format zip
