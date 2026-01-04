@@ -37,7 +37,10 @@ impl ForwardingEventLogger for DynamoDbLogger {
             "evm_address".to_string(),
             AttributeValue::S(evm_address.address),
         );
-        fields.insert("timestamp".to_string(), AttributeValue::N(now_millis.to_string()));
+        fields.insert(
+            "timestamp".to_string(),
+            AttributeValue::N(now_millis.to_string()),
+        );
 
         match icp_account {
             IcpAccount::ICRC(icrc) => {

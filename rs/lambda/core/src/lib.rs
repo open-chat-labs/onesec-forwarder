@@ -2,7 +2,7 @@ use itertools::Itertools;
 use onesec_forwarder_types::*;
 use std::collections::{HashMap, HashSet};
 use std::time::{SystemTime, UNIX_EPOCH};
-use tracing::{error, trace};
+use tracing::{error, info, trace};
 
 pub struct Runner<
     F: OneSecForwarderClient,
@@ -228,7 +228,7 @@ impl<
                         address: address.clone(),
                     };
 
-                    trace!(?evm_address, "Forwarding EVM to ICP...");
+                    info!(?evm_address, "Forwarding EVM to ICP...");
 
                     self.onesec_minter_client
                         .forward_evm_to_icp(
@@ -240,13 +240,18 @@ impl<
 
                     if let Err(error) = self
                         .forwarding_event_logger
-                        .log(recipient.token, evm_address.clone(), icp_account.clone(), get_timestamp_millis())
+                        .log(
+                            recipient.token,
+                            evm_address.clone(),
+                            icp_account.clone(),
+                            get_timestamp_millis(),
+                        )
                         .await
                     {
                         error!(?error, "Failed to write forwarding event to log");
                     }
 
-                    trace!(?evm_address, "Forwarded EVM to ICP");
+                    info!(?evm_address, "Forwarded EVM to ICP");
                 }
             }
         }
@@ -256,7 +261,10 @@ impl<
 }
 
 fn get_timestamp_millis() -> u64 {
-    SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as u64
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as u64
 }
 
 pub trait OneSecForwarderClient {
